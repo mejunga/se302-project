@@ -1,4 +1,4 @@
-package com.util;
+package com.app.util;
 
 public class CsvHelper {
 }
