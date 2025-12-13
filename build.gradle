@@ -20,7 +20,7 @@ java {
 }
 
 application {
-    mainClass = 'com.app.App'
+    mainClass = 'com.app.SchedulerApp'
     mainModule = 'com.app'
 }
 
