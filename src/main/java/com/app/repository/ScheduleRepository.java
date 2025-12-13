@@ -1,4 +1,4 @@
-package com.repository;
+package com.app.repository;
 
 public class ScheduleRepository {
 }
