@@ -12,4 +12,20 @@ public class ScheduleRepository {
         this.possibleSchedules = possibleSchedules;
         this.jsonFilePath = jsonFilePath;
     }
+
+    public List<Schedule> getPossibleSchedules() {
+        return possibleSchedules;
+    }
+
+    public void setPossibleSchedules(List<Schedule> possibleSchedules) {
+        this.possibleSchedules = possibleSchedules;
+    }
+
+    public String getJsonFilePath() {
+        return jsonFilePath;
+    }
+
+    public void setJsonFilePath(String jsonFilePath) {
+        this.jsonFilePath = jsonFilePath;
+    }
 }
