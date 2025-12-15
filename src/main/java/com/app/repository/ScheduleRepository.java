@@ -28,4 +28,15 @@ public class ScheduleRepository {
     public void setJsonFilePath(String jsonFilePath) {
         this.jsonFilePath = jsonFilePath;
     }
+
+    public void saveSchedulesToJson() {}
+
+    public void fetchSchedulesFromJson() {}
+
+    public void exportScheduleToPDF(Schedule schedule) {}
+
+    public void clearPossibleSchedules() {}
+
+    public void addPossibleSchedule(Schedule schedule) {}
+
 }
