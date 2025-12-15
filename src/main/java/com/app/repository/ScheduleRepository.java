@@ -35,8 +35,12 @@ public class ScheduleRepository {
 
     public void exportScheduleToPDF(Schedule schedule) {}
 
-    public void clearPossibleSchedules() {}
+    public void clearPossibleSchedules() {
+        possibleSchedules.clear();
+    }
 
-    public void addPossibleSchedule(Schedule schedule) {}
+    public void addPossibleSchedule(Schedule schedule) {
+        if(schedule != null) possibleSchedules.add(schedule);
+    }
 
 }
