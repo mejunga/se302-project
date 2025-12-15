@@ -19,9 +19,35 @@ public class Schedule {
         this.slotsPerDay=slotsPerDay;
     }
 
-    public void assignSession(ExamSession session, List<ClassRoom> rooms, int day, int startSlot){}
+    public void assignSession(ExamSession session, List<ClassRoom> rooms, int day, int startSlot){
+        int duration=session.getDurationSlots();
 
-    public void removeSession(ExamSession session){}
+        for (ClassRoom room:rooms){
+            if (!isRoomAvailable(room,day,startSlot,duration)){
+                System.err.println("Room "+room.getRoomName()+" is not available for assigning.");
+                return;
+            }
+        }
+
+        for(ClassRoom room:rooms){
+            for (int i=0;i<duration;i++){
+                ((ExamSession[][])timetables.get(room))[day][startSlot+i]=session;
+            }
+        }
+    }
+
+    public void removeSession(ExamSession session){
+        if (session==null){return;}
+        for (ClassRoom room:timetables.keySet()){
+            for (int i=0;i<days;i++){
+                for (int j=0;j<slotsPerDay;j++){
+                    if (timetables.get(room)[i][j]!=null && timetables.get(room)[i][j].equals(session)){
+                        timetables.get(room)[i][j]=null;
+                    }
+                }
+            }
+        }
+    }
 
     public boolean isRoomAvailable(ClassRoom room, int day, int startSlot, int duration){
        //Checking is there something funny, maybe using exceptions later
