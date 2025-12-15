@@ -64,4 +64,15 @@ public class MasterDataRepository {
     public void setCSVFilesRootPath(String CSVFilesRootPath) {
         this.CSVFilesRootPath = CSVFilesRootPath;
     }
+
+    public void loadDataFromCSV(String dirPath) {
+    }
+    
+    public ClassRoom findRoomByName(String name) {
+        return null;
+    }
+
+    public ExamSession findSessionByCourse(String code) {
+        return null;
+    }
 }
