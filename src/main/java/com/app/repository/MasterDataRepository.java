@@ -66,6 +66,31 @@ public class MasterDataRepository {
     }
 
     public void loadDataFromCSV(String dirPath) {
+/*
+    ClasRooms
+    try (BufferedReader br = new BufferedReader(new FileReader(dirPath))) {
+        String line;
+        boolean firstLine = true;
+
+        while ((line = br.readLine()) != null) {
+            if (firstLine) { // skip header
+                firstLine = false;
+                continue;
+            }
+
+            String[] parts = line.split(",");
+            String roomName = parts[0];
+            int capacity = Integer.parseInt(parts[1]);
+
+            allClassRooms.add(new ClassRoom(roomName, capacity));
+        }
+    } catch (Exception e) {
+        e.printStackTrace();
+    }
+
+
+    }
+ */
     }
 
     public ClassRoom findRoomByName(String name) {
