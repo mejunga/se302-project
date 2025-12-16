@@ -67,12 +67,23 @@ public class MasterDataRepository {
 
     public void loadDataFromCSV(String dirPath) {
     }
-    
+
     public ClassRoom findRoomByName(String name) {
+        if (name == null) return null;
+        String key = name.trim();
+        for (ClassRoom r : allClassRooms) {
+            if (r.getRoomName().equals(key)) return r;
+        }
         return null;
     }
 
     public ExamSession findSessionByCourse(String code) {
+        if (code == null) return null;
+        String key = code.trim();
+        for (ExamSession s : pendingSessions) {
+            if (s.getCourse() != null && s.getCourse().getCourseCode().equals(key)) return s;
+        }
         return null;
     }
+    
 }
