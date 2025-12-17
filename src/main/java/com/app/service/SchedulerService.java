@@ -37,6 +37,7 @@ public class SchedulerService {
         List<ExamSession> pendingSessions = new ArrayList<>(masterRepository.getPendingSessions());
         List<ClassRoom> allRooms = masterRepository.getAllClassRooms();
 
+        // Öğrenci sayısına göre büyükten küçüğe sıralama (Heuristic)
         pendingSessions.sort((s1, s2) -> Integer.compare(
                 s2.getCourse().getEnrolledStudents().size(), 
                 s1.getCourse().getEnrolledStudents().size()
@@ -69,12 +70,13 @@ public class SchedulerService {
 
                 for (List<ClassRoom> roomsToUse : roomCombinations) {
                     
-                    if (checkAllConstraints(schedule, currentSession, day, slot)) {
+                    if (checkAllConstraints(schedule, currentSession, roomsToUse, day, slot)) {
                         schedule.assignSession(currentSession, roomsToUse, day, slot);
                         
                         if (backtrack(schedule, exams, index + 1, allRooms)) {
                             return true;
                         }
+
                         schedule.removeSession(currentSession);
                     }
                 }
@@ -92,17 +94,16 @@ public class SchedulerService {
              }
         }
 
-        boolean valid = checkAllConstraints(schedule, session, newDay, newSlot);
+        boolean valid = checkAllConstraints(schedule, session, newRooms, newDay, newSlot);
         return valid;
     }
 
-    private boolean checkAllConstraints(Schedule schedule, ExamSession currentSession, int day, int startSlot) {
+    private boolean checkAllConstraints(Schedule schedule, ExamSession currentSession, List<ClassRoom> rooms, int day, int startSlot) {
         List<Student> enrolledStudents = currentSession.getCourse().getEnrolledStudents();
         int duration = currentSession.getDurationSlots();
         int currentEnd = startSlot + duration;
 
         List<ExamSession> dailySessions = new ArrayList<>();
-
         for (Map.Entry<ExamSession, Schedule.SessionPlacement> entry : schedule.getAssignedSessions().entrySet()) {
             if (entry.getValue().day == day) {
                 dailySessions.add(entry.getKey());
@@ -121,11 +122,9 @@ public class SchedulerService {
                 if (startSlot < otherEnd && currentEnd > otherStart) {
                     return false; 
                 }
-
                 if (startSlot >= otherEnd && (startSlot - otherEnd) < minGapSlots) {
                     return false;
                 }
-
                 if (otherStart >= currentEnd && (otherStart - currentEnd) < minGapSlots) {
                     return false;
                 }
@@ -146,7 +145,7 @@ public class SchedulerService {
 
         if (this.userConstraints != null) {
             for (SchedulingConstraint constraint : this.userConstraints) {
-                if (!constraint.check(schedule, currentSession, null, day, startSlot)) { 
+                if (!constraint.check(schedule, currentSession, rooms, day, startSlot)) { 
                     return false;
                 }
             }
@@ -184,7 +183,6 @@ public class SchedulerService {
         if (this.userConstraints != null) {
             this.userConstraints.clear();
         }
-        System.out.println("User constraints cleared.");
     }
 
     private int getExamsCountInDay(Schedule schedule, int day) {
