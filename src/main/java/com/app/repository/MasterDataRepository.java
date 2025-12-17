@@ -71,103 +71,103 @@ public class MasterDataRepository {
 
     public void loadDataFromCSV(String dirPath) {
 
-    // Classrooms
-    try (BufferedReader br = new BufferedReader(new FileReader(dirPath))) {
-        String line;
-        boolean firstLine = true;
+        // Classrooms
+        try (BufferedReader br = new BufferedReader(new FileReader(dirPath))) {
+            String line;
+            boolean firstLine = true;
 
-        while ((line = br.readLine()) != null) {
-            if (firstLine) { // skip header
-                firstLine = false;
-                continue;
+            while ((line = br.readLine()) != null) {
+                if (firstLine) { // skip header
+                    firstLine = false;
+                    continue;
+                }
+
+                String[] parts = line.split(",");
+                String roomName = parts[0];
+                int capacity = Integer.parseInt(parts[1]);
+
+                allClassRooms.add(new ClassRoom(roomName, capacity));
             }
-
-            String[] parts = line.split(",");
-            String roomName = parts[0];
-            int capacity = Integer.parseInt(parts[1]);
-
-            allClassRooms.add(new ClassRoom(roomName, capacity));
+        } catch (Exception e) {
+            e.printStackTrace();
         }
-    } catch (Exception e) {
-        e.printStackTrace();
-    }
 
 
-    // Students
-    try (BufferedReader br = new BufferedReader(new FileReader(dirPath))) {
-        String line;
-        boolean firstLine = true;
+        // Students
+        try (BufferedReader br = new BufferedReader(new FileReader(dirPath))) {
+            String line;
+            boolean firstLine = true;
 
-        while ((line = br.readLine()) != null) {
-            if (firstLine) { // skip header
-                firstLine = false;
-                continue;
+            while ((line = br.readLine()) != null) {
+                if (firstLine) { // skip header
+                    firstLine = false;
+                    continue;
+                }
+
+                allStudents.add(new Student(line.trim(), new ArrayList<Course>()));
             }
-
-            allStudents.add(new Student(line.trim(), new ArrayList<Course>()));
+        } catch (Exception e) {
+            e.printStackTrace();
         }
-    } catch (Exception e) {
-        e.printStackTrace();
-    }
 
-    // Courses
-    try (BufferedReader br = new BufferedReader(new FileReader(dirPath))) {
-        String line;
-        boolean firstLine = true;
+        // Courses
+        try (BufferedReader br = new BufferedReader(new FileReader(dirPath))) {
+            String line;
+            boolean firstLine = true;
 
-        while ((line = br.readLine()) != null) {
-            if (firstLine) { // skip header
-                firstLine = false;
-                continue;
+            while ((line = br.readLine()) != null) {
+                if (firstLine) { // skip header
+                    firstLine = false;
+                    continue;
+                }
+
+                allCourses.add(new Course(line.trim(), new ArrayList<Student>()));
             }
-
-            allCourses.add(new Course(line.trim(), new ArrayList<Student>()));
+        } catch (Exception e) {
+            e.printStackTrace();
         }
-    } catch (Exception e) {
-        e.printStackTrace();
-    }
 
-    // Attendances
-    HashMap<String, Student> studentMap = new HashMap<>();
-    for (Student s : allStudents) {
-        studentMap.put(s.getStudentID(), s);
-    }
+        // Attendances
+        HashMap<String, Student> studentMap = new HashMap<>();
+        for (Student s : allStudents) {
+            studentMap.put(s.getStudentID(), s);
+        }
 
-    HashMap<String, Course> courseMap = new HashMap<>();
-    for (Course c : allCourses) {
-        courseMap.put(c.getCourseCode(), c);
-    }
+        HashMap<String, Course> courseMap = new HashMap<>();
+        for (Course c : allCourses) {
+            courseMap.put(c.getCourseCode(), c);
+        }
 
-    try (BufferedReader br = new BufferedReader(new FileReader(dirPath))) {
-        String line;
-        int lineNumber = 0;
-        Course currentCourse = null;
+        try (BufferedReader br = new BufferedReader(new FileReader(dirPath))) {
+            String line;
+            int lineNumber = 0;
+            Course currentCourse = null;
 
-        while ((line = br.readLine()) != null) {
-            lineNumber++;
+            while ((line = br.readLine()) != null) {
+                lineNumber++;
 
-            // l = 3n + 1 → course code
-            if (lineNumber % 3 == 1) {
-                currentCourse = courseMap.get(line.trim());
-            }
+                // l = 3n + 1 → course code
+                if (lineNumber % 3 == 1) {
+                    currentCourse = courseMap.get(line.trim());
+                }
 
-            // l = 3n + 2 → student IDs
-            else if (lineNumber % 3 == 2 && currentCourse != null) {
-                String[] ids = line.split(",");
-                for (String id : ids) {
-                    Student student = studentMap.get(id.trim());
-                    if (student != null) {
-                        currentCourse.getEnrolledStudents().add(student);
-                        student.getEnrolledCourses.add(currentCourse);
+                // l = 3n + 2 → student IDs
+                else if (lineNumber % 3 == 2 && currentCourse != null) {
+                    String[] ids = line.split(",");
+                    for (String id : ids) {
+                        Student student = studentMap.get(id.trim());
+                        if (student != null) {
+                            currentCourse.getEnrolledStudents().add(student);
+                            student.getEnrolledCourses.add(currentCourse);
+                        }
                     }
                 }
-            }
 
-            // l = 3n + 3 → empty line (ignore)
+                // l = 3n + 3 → empty line (ignore)
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
-    } catch (Exception e) {
-        e.printStackTrace();
-    }
     }
 
 
