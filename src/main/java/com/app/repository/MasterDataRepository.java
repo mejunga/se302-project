@@ -6,7 +6,6 @@ import com.app.model.ExamSession;
 import com.app.model.Student;
 
 import java.util.List;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -104,7 +103,7 @@ public class MasterDataRepository {
                     continue;
                 }
 
-                allStudents.add(new Student(line.trim(), new ArrayList<Course>()));
+                allStudents.add(new Student(line.trim()));
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -121,7 +120,7 @@ public class MasterDataRepository {
                     continue;
                 }
 
-                allCourses.add(new Course(line.trim(), new ArrayList<Student>()));
+                allCourses.add(new Course(line.trim()));
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -158,7 +157,7 @@ public class MasterDataRepository {
                         Student student = studentMap.get(id.trim());
                         if (student != null) {
                             currentCourse.getEnrolledStudents().add(student);
-                            student.getEnrolledCourses.add(currentCourse);
+                            student.getEnrolledCourses().add(currentCourse);
                         }
                     }
                 }
