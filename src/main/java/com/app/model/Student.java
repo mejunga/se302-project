@@ -11,7 +11,7 @@ public class Student {
         this.enrolledStudents=enrolledStudents;
     }
 
-    public String getStudentId() {
+    public String getStudentID() {
         return studentId;
     }
 
