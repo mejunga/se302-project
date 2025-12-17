@@ -71,6 +71,7 @@ public class MasterDataRepository {
 
     public void loadDataFromCSV(String dirPath) {
 
+    // Classrooms
     try (BufferedReader br = new BufferedReader(new FileReader(dirPath))) {
         String line;
         boolean firstLine = true;
@@ -92,6 +93,7 @@ public class MasterDataRepository {
     }
 
 
+    // Students
     try (BufferedReader br = new BufferedReader(new FileReader(dirPath))) {
         String line;
         boolean firstLine = true;
@@ -108,6 +110,7 @@ public class MasterDataRepository {
         e.printStackTrace();
     }
 
+    // Courses
     try (BufferedReader br = new BufferedReader(new FileReader(dirPath))) {
         String line;
         boolean firstLine = true;
@@ -124,6 +127,7 @@ public class MasterDataRepository {
         e.printStackTrace();
     }
 
+    // Attendances
     HashMap<String, Student> studentMap = new HashMap<>();
     for (Student s : allStudents) {
         studentMap.put(s.getStudentID(), s);
@@ -154,6 +158,7 @@ public class MasterDataRepository {
                     Student student = studentMap.get(id.trim());
                     if (student != null) {
                         currentCourse.getEnrolledStudents().add(student);
+                        student.getEnrolledCourses.add(currentCourse);
                     }
                 }
             }
