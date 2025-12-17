@@ -6,5 +6,5 @@ module com.app {
 
     exports com.app;
 
-    opens com.app to javafx.fxml; 
+    opens com.app.controller to javafx.fxml;
 }
