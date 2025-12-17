@@ -6,6 +6,10 @@ import com.app.model.ExamSession;
 import com.app.model.Student;
 
 import java.util.List;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.io.BufferedReader;
+import java.io.FileReader;
 
 public class MasterDataRepository {
 
@@ -66,8 +70,7 @@ public class MasterDataRepository {
     }
 
     public void loadDataFromCSV(String dirPath) {
-/*
-    ClasRooms
+
     try (BufferedReader br = new BufferedReader(new FileReader(dirPath))) {
         String line;
         boolean firstLine = true;
@@ -89,9 +92,80 @@ public class MasterDataRepository {
     }
 
 
+    try (BufferedReader br = new BufferedReader(new FileReader(dirPath))) {
+        String line;
+        boolean firstLine = true;
+
+        while ((line = br.readLine()) != null) {
+            if (firstLine) { // skip header
+                firstLine = false;
+                continue;
+            }
+
+            allStudents.add(new Student(line.trim(), new ArrayList<Course>()));
+        }
+    } catch (Exception e) {
+        e.printStackTrace();
     }
- */
+
+    try (BufferedReader br = new BufferedReader(new FileReader(dirPath))) {
+        String line;
+        boolean firstLine = true;
+
+        while ((line = br.readLine()) != null) {
+            if (firstLine) { // skip header
+                firstLine = false;
+                continue;
+            }
+
+            allCourses.add(new Course(line.trim(), new ArrayList<Student>()));
+        }
+    } catch (Exception e) {
+        e.printStackTrace();
     }
+
+    HashMap<String, Student> studentMap = new HashMap<>();
+    for (Student s : allStudents) {
+        studentMap.put(s.getStudentID(), s);
+    }
+
+    HashMap<String, Course> courseMap = new HashMap<>();
+    for (Course c : allCourses) {
+        courseMap.put(c.getCourseCode(), c);
+    }
+
+    try (BufferedReader br = new BufferedReader(new FileReader(dirPath))) {
+        String line;
+        int lineNumber = 0;
+        Course currentCourse = null;
+
+        while ((line = br.readLine()) != null) {
+            lineNumber++;
+
+            // l = 3n + 1 → course code
+            if (lineNumber % 3 == 1) {
+                currentCourse = courseMap.get(line.trim());
+            }
+
+            // l = 3n + 2 → student IDs
+            else if (lineNumber % 3 == 2 && currentCourse != null) {
+                String[] ids = line.split(",");
+                for (String id : ids) {
+                    Student student = studentMap.get(id.trim());
+                    if (student != null) {
+                        currentCourse.getEnrolledStudents().add(student);
+                    }
+                }
+            }
+
+            // l = 3n + 3 → empty line (ignore)
+        }
+    } catch (Exception e) {
+        e.printStackTrace();
+    }
+    }
+
+
 
     public ClassRoom findRoomByName(String name) {
         if (name == null) return null;
