@@ -5,25 +5,24 @@ import com.google.gson.Gson;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.lang.reflect.Type;
 
 public class JsonHelper {
 
     private static final Gson gson = new Gson();
 
-    public static void saveToFile(Object data, String filePath) {
-        try (FileWriter writer = new FileWriter(filePath)) {
+    public static <T> void saveToFile(T data, String path) {
+        try (FileWriter writer = new FileWriter(path)) {
             gson.toJson(data, writer);
         } catch (IOException e) {
-            throw new RuntimeException("Failed to write JSON file: " + filePath, e);
+            throw new RuntimeException("Failed to write JSON file: " + path, e);
         }
     }
 
-    public static <T> T loadFromFile(String filePath, Type type) {
-        try (FileReader reader = new FileReader(filePath)) {
-            return gson.fromJson(reader, type);
+    public static <T> T loadFromFile(String path, Class<T> clazz) {
+        try (FileReader reader = new FileReader(path)) {
+            return gson.fromJson(reader, clazz);
         } catch (IOException e) {
-            throw new RuntimeException("Failed to read JSON file: " + filePath, e);
+            throw new RuntimeException("Failed to read JSON file: " + path, e);
         }
     }
 }
