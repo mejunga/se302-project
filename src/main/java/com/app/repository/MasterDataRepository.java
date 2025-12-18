@@ -111,6 +111,7 @@ public class MasterDataRepository {
                     else if (lineNumber % 3 == 2 && currentCourse != null) {
                         String[] ids = line.split(",");
                         for (String id : ids) {
+                            id = id.trim().replace("'","").replace("[","").replace("]","");
                             Student student = studentMap.get(id.trim());
                             if (student != null) {
                                 currentCourse.getEnrolledStudents().add(student);

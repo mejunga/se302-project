@@ -118,6 +118,7 @@ public class LoadDataController {
             log("Selected Attendance file: " + selectedFile.getName());
             txtAttendancePath.setText(selectedFile.getAbsolutePath());
             fileAttendance = new File(selectedFile.getAbsolutePath());
+            masterRepository.setAttendanceCSVPath(fileAttendance.getAbsolutePath());
         } else {
             System.out.println("File selection cancelled.");
         }
