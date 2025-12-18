@@ -11,7 +11,6 @@
 
     <center>
         <TabPane tabClosingPolicy="UNAVAILABLE" style="-fx-background-color: white;">
-            
             <Tab text="Courses">
                 <TableView fx:id="courseTable">
                     <columns>
@@ -42,7 +41,7 @@
                         <TableColumn fx:id="colRoomName" text="Room Name" prefWidth="120" resizable="false"/>
                         <TableColumn fx:id="colCapacity" text="Capacity" prefWidth="150"/>
                     </columns>
-                    </TableView>
+                </TableView>
             </Tab>
         </TabPane>
     </center>
@@ -78,13 +77,21 @@
                     
                     <Separator style="-fx-padding: 10 0;"/>
 
-                    <Label text="Add Constraint" textFill="#2c3e50">
+                    <Label text="Exam Configuration" textFill="#2c3e50">
                         <font><Font name="System Bold" size="16.0"/></font>
                     </Label>
                     
                     <VBox spacing="10">
-                        <ComboBox fx:id="comboCourses" promptText="Select Course..." maxWidth="Infinity" style="-fx-font-size: 13px;"/>
-                        <ComboBox fx:id="comboConstraintType" promptText="Rule Type..." maxWidth="Infinity" style="-fx-font-size: 13px;"/>
+                        <Label text="Select Course:" style="-fx-font-size: 12px;" textFill="#7f8c8d"/>
+                        <ComboBox fx:id="comboCourses" promptText="Choose a course..." maxWidth="Infinity"/>
+                        
+                        <Label text="Exam Duration (minutes):" style="-fx-font-size: 12px;" textFill="#7f8c8d"/>
+                        <Spinner fx:id="spinExamDuration" editable="true" maxWidth="Infinity"/>
+
+                        <Separator style="-fx-padding: 5 0;"/>
+                        
+                        <Label text="Add Constraint (Optional):" style="-fx-font-size: 12px;" textFill="#7f8c8d"/>
+                        <ComboBox fx:id="comboConstraintType" promptText="Rule Type..." maxWidth="Infinity"/>
                         
                         <VBox fx:id="dynamicInputBox" spacing="10">
                             <ComboBox fx:id="comboDay" promptText="Select Day" visible="false" maxWidth="Infinity"/>
@@ -93,17 +100,17 @@
                             <TextField fx:id="txtRoomName" promptText="Room Name" visible="false"/>
                         </VBox>
                         
-                        <Button fx:id="btnAddConstraint" text="Add Rule" onAction="#handleAddConstraint" maxWidth="Infinity"
+                        <Button fx:id="btnAddConstraint" text="Save Configuration" onAction="#handleSaveConfig" maxWidth="Infinity"
                                 style="-fx-background-color: #3498db; -fx-text-fill: white; -fx-cursor: hand; -fx-font-weight: bold;"/>
                     </VBox>
                     
                     <Separator style="-fx-padding: 10 0;"/>
                     
                     <VBox spacing="5" VBox.vgrow="ALWAYS">
-                        <Label text="Active Rules" textFill="#2c3e50">
+                        <Label text="Active Configurations" textFill="#2c3e50">
                             <font><Font name="System Bold" size="14.0"/></font>
                         </Label>
-                        <ListView fx:id="listConstraints" prefHeight="200" style="-fx-background-radius: 4;"/>
+                        <ListView fx:id="listConstraints" prefHeight="150" style="-fx-background-radius: 4;"/>
                         <Button fx:id="btnRemoveConstraint" text="Remove Selected" onAction="#handleRemoveConstraint" maxWidth="Infinity"
                                 style="-fx-text-fill: #c0392b; -fx-background-color: white; -fx-border-color: #c0392b; -fx-border-radius: 4; -fx-cursor: hand;"/>
                     </VBox>
@@ -112,8 +119,7 @@
                     
                     <Button fx:id="btnGenerate" text="GENERATE SCHEDULE" onAction="#handleGenerate"
                             maxWidth="Infinity" prefHeight="50"
-                            style="-fx-background-color: #27ae60; -fx-text-fill: white; -fx-font-size: 16px; -fx-font-weight: bold; -fx-cursor: hand; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.2), 5, 0, 0, 2);">
-                    </Button>
+                            style="-fx-background-color: #27ae60; -fx-text-fill: white; -fx-font-size: 16px; -fx-font-weight: bold; -fx-cursor: hand;"/>
                 </VBox>
             </content>
         </ScrollPane>

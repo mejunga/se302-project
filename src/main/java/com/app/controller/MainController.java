@@ -63,6 +63,12 @@ public class MainController {
 
     }
 
+    public void setStatus(String message) {
+        if (statusLabel != null) {
+            statusLabel.setText("Status: " + message);
+        }
+    }
+
     private void loadView(String fxmlFileName) {
         try {
             URL resource = getClass().getResource("/fxml/" + fxmlFileName + ".fxml");

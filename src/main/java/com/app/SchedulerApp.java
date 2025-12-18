@@ -9,7 +9,7 @@ public class SchedulerApp extends Application {
     @Override
     public void start(Stage stage) throws Exception {
         FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/fxml/MainView.fxml"));
-        Scene scene = new Scene(fxmlLoader.load(), 1000, 700);
+        Scene scene = new Scene(fxmlLoader.load(), 1900, 1200);
         stage.setTitle("Exam Scheduler");
         stage.setScene(scene);
         stage.show();

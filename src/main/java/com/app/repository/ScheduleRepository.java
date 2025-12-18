@@ -16,11 +16,26 @@ import java.util.List;
 public class ScheduleRepository {
 
     private List<Schedule> possibleSchedules;
-    private String jsonFilePath;
+    
+    private final String jsonFilePath;
 
-    public ScheduleRepository(List<Schedule> possibleSchedules, String jsonFilePath) {
-        this.possibleSchedules = (possibleSchedules != null) ? possibleSchedules : new ArrayList<>();
-        this.jsonFilePath = jsonFilePath;
+    public ScheduleRepository() {
+        this.possibleSchedules = new ArrayList<>();
+        
+        this.jsonFilePath = Paths.get(System.getProperty("user.dir"), "data", "SystemData.json").toString();
+        
+        ensureDirectoryExists();
+    }
+
+    private void ensureDirectoryExists() {
+        try {
+            Path path = Paths.get(jsonFilePath).getParent();
+            if (path != null && Files.notExists(path)) {
+                Files.createDirectories(path);
+            }
+        } catch (IOException e) {
+            System.err.println("Could not create data directory: " + e.getMessage());
+        }
     }
 
     public List<Schedule> getPossibleSchedules() {
@@ -38,14 +53,10 @@ public class ScheduleRepository {
         return jsonFilePath;
     }
 
-    public void setJsonFilePath(String jsonFilePath) {
-        this.jsonFilePath = jsonFilePath;
-    }
 
     public void saveSchedulesToJson() {
-        if (jsonFilePath == null || jsonFilePath.trim().isEmpty()) {
-            throw new IllegalStateException("jsonFilePath is not set");
-        }
+        ensureDirectoryExists();
+        
         if (possibleSchedules == null) {
             possibleSchedules = new ArrayList<>();
         }
@@ -53,12 +64,13 @@ public class ScheduleRepository {
     }
 
     public void fetchSchedulesFromJson() {
-        if (jsonFilePath == null || jsonFilePath.trim().isEmpty()) {
-            throw new IllegalStateException("jsonFilePath is not set");
+        Path path = Paths.get(jsonFilePath);
+        if (Files.exists(path)) {
+            Schedule[] arr = JsonHelper.loadFromFile(jsonFilePath, Schedule[].class);
+            possibleSchedules = (arr != null) ? new ArrayList<>(Arrays.asList(arr)) : new ArrayList<>();
+        } else {
+            possibleSchedules = new ArrayList<>();
         }
-
-        Schedule[] arr = JsonHelper.loadFromFile(jsonFilePath, Schedule[].class);
-        possibleSchedules = (arr != null) ? new ArrayList<>(Arrays.asList(arr)) : new ArrayList<>();
     }
 
     public void exportScheduleToPDF(Schedule schedule) {
@@ -75,23 +87,18 @@ public class ScheduleRepository {
 
         JsonHelper.saveToFile(schedule, tempJson.toString());
 
-        Path baseDir;
-        if (jsonFilePath != null && !jsonFilePath.trim().isEmpty()) {
-            Path p = Paths.get(jsonFilePath).toAbsolutePath();
-            baseDir = (p.getParent() != null) ? p.getParent() : Paths.get(".").toAbsolutePath();
-        } else {
-            baseDir = Paths.get(".").toAbsolutePath();
-        }
-
+        Path baseDir = Paths.get(jsonFilePath).getParent();
+        if (baseDir == null) baseDir = Paths.get(".");
+        
         Path outPdf = baseDir.resolve("exported_schedule.pdf");
 
         String scriptProp = System.getProperty("pdf.printer.script");
         List<String> candidates = Arrays.asList(
                 scriptProp,
                 "PdfPrinter.py",
+                "scripts/PdfPrinter.py",
                 "external/PdfPrinter.py",
-                "src/main/java/com/app/external/PdfPrinter.py",
-                "com/app/external/PdfPrinter.py"
+                "src/main/java/com/app/external/PdfPrinter.py"
         );
 
         Path scriptPath = null;
@@ -108,12 +115,6 @@ public class ScheduleRepository {
             throw new IllegalStateException("PdfPrinter.py not found. Set -Dpdf.printer.script=/path/to/PdfPrinter.py");
         }
 
-        try {
-            if (outPdf.getParent() != null) Files.createDirectories(outPdf.getParent());
-        } catch (IOException e) {
-            throw new RuntimeException("Failed to create output directory: " + outPdf.getParent(), e);
-        }
-
         List<String> cmd = new ArrayList<>();
         cmd.add("python");
         cmd.add(scriptPath.toString());
@@ -125,34 +126,31 @@ public class ScheduleRepository {
 
         try {
             Process pr = pb.start();
-            StringBuilder out = new StringBuilder();
             try (BufferedReader br = new BufferedReader(new InputStreamReader(pr.getInputStream()))) {
                 String line;
                 while ((line = br.readLine()) != null) {
-                    out.append(line).append(System.lineSeparator());
+                    System.out.println("Python: " + line);
                 }
             }
             int code = pr.waitFor();
             if (code != 0) {
-                throw new RuntimeException("PDF export failed (exit=" + code + "):\n" + out);
+                throw new RuntimeException("PDF export failed with exit code: " + code);
             }
         } catch (IOException | InterruptedException e) {
-            Thread.currentThread().interrupt();
+            if (e instanceof InterruptedException) Thread.currentThread().interrupt();
             throw new RuntimeException("Failed to run PdfPrinter.py", e);
         } finally {
             try {
                 Files.deleteIfExists(tempJson);
-            } catch (IOException ignored) {
-            }
+            } catch (IOException ignored) {}
         }
     }
 
-
     public void clearPossibleSchedules() {
-        if (possibleSchedules == null) {
-            possibleSchedules = new ArrayList<>();
-        } else {
+        if (possibleSchedules != null) {
             possibleSchedules.clear();
+        } else {
+            possibleSchedules = new ArrayList<>();
         }
     }
 

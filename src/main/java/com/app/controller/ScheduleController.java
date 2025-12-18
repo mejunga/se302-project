@@ -25,9 +25,7 @@ public class ScheduleController {
     @FXML
     public void initialize() {
         scheduleListView.setItems(FXCollections.observableArrayList());
-
         scheduleListView.getSelectionModel().selectedItemProperty().addListener((obs, oldVal, newVal) -> {
-
         });
     }
 
@@ -42,7 +40,7 @@ public class ScheduleController {
         });
 
         examBlock.setOnDragDone(event -> {
-            
+        
         });
     }
 
