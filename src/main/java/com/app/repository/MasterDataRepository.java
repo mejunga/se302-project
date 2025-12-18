@@ -59,7 +59,7 @@ public class MasterDataRepository {
                 boolean firstLine = true;
                 while ((line = br.readLine()) != null) {
                     if (firstLine) { firstLine = false; continue; }
-                    String[] parts = line.split(",");
+                    String[] parts = line.split(";");
                     if (parts.length >= 2) {
                         allClassRooms.add(new ClassRoom(parts[0].trim(), Integer.parseInt(parts[1].trim())));
                     }

@@ -19,4 +19,9 @@ public class Course {
     public List<Student> getEnrolledStudents() {
         return enrolledStudents;
     }
+
+    @Override
+    public String toString() {
+        return courseCode;
+    }
 }

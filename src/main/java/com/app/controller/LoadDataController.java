@@ -58,6 +58,7 @@ public class LoadDataController {
             log("Selected Students file: " + selectedFile.getName());
             txtStudentsPath.setText(selectedFile.getAbsolutePath());
             fileStudents = new File(selectedFile.getAbsolutePath());
+            masterRepository.setStudentsCSVPath(fileStudents.getAbsolutePath());
         } else {
             System.out.println("File selection cancelled.");
         }
@@ -77,6 +78,7 @@ public class LoadDataController {
             log("Selected Courses file: " + selectedFile.getName());
             txtCoursesPath.setText(selectedFile.getAbsolutePath());
             fileCourses = new File(selectedFile.getAbsolutePath());
+            masterRepository.setCoursesCSVPath(fileCourses.getAbsolutePath());
         } else {
             System.out.println("File selection cancelled.");
         }
@@ -96,6 +98,7 @@ public class LoadDataController {
             log("Selected Classrooms file: " + selectedFile.getName());
             txtRoomsPath.setText(selectedFile.getAbsolutePath());
             fileRooms = new File(selectedFile.getAbsolutePath());
+            masterRepository.setRoomsCSVPath(fileRooms.getAbsolutePath());
         } else {
             System.out.println("File selection cancelled.");
         }
@@ -121,8 +124,17 @@ public class LoadDataController {
     }
 
     @FXML
-    public void handleLoad(ActionEvent event) {
-        // TODO: Implement Data Loading Logic
+    public void handleLoad(ActionEvent event) throws IOException {
+        masterRepository.loadAllDataFromCSV();
+        int studentNum = masterRepository.getAllStudents().size();
+        log("All " + studentNum + " students are loaded");
+        int coursesNum = masterRepository.getAllCourses().size();
+        log("All " + coursesNum + " courses are loaded");
+        int classesNum = masterRepository.getAllClassRooms().size();
+        log("All " + classesNum + " classrooms are loaded");
+        lblStudentCount.setText(String.valueOf(studentNum));
+        lblCourseCount.setText(String.valueOf(coursesNum));
+        lblRoomCount.setText(String.valueOf(classesNum));
     }
 
     private void log(String message) {
