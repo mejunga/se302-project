@@ -1,10 +1,6 @@
 package com.app.service;
 
 import com.app.model.ClassRoom;
-import com.app.model.ExamSession;
-import com.app.model.Schedule;
-
-import java.util.List;
 
 public class ConstraintFactory {
 
@@ -17,56 +13,66 @@ public class ConstraintFactory {
 
     public static SchedulingConstraint create(ConstraintType type, String targetCourseCode, Object... params) {
         
-        return (Schedule schedule, ExamSession session, List<ClassRoom> rooms, int day, int startSlot) -> {
+        switch (type) {
             
-            if (!session.getCourse().getCourseCode().equals(targetCourseCode)) {
-                return true; 
-            }
+            case AVOID_DAY:
+                if (params.length > 0 && params[0] instanceof Integer) {
+                    int forbiddenDay = (int) params[0];
 
-            switch (type) {
-                case AVOID_DAY:
-                    if (params.length > 0 && params[0] instanceof Integer) {
-                        int forbiddenDay = (int) params[0];
+                    return (schedule, session, rooms, day, startSlot) -> {
+                        if (!session.getCourse().getCourseCode().equals(targetCourseCode)) return true;
                         return day != forbiddenDay;
-                    }
-                    return true;
+                    };
+                }
+                break;
 
-                case TIME_RANGE:
-                    if (params.length >= 2 && params[0] instanceof Integer && params[1] instanceof Integer) {
-                        int minSlot = (int) params[0];
-                        int maxSlot = (int) params[1];
+            case TIME_RANGE:
+                if (params.length >= 2 && params[0] instanceof Integer && params[1] instanceof Integer) {
+                    int minSlot = (int) params[0];
+                    int maxSlot = (int) params[1];
+
+                    return (schedule, session, rooms, day, startSlot) -> {
+                        if (!session.getCourse().getCourseCode().equals(targetCourseCode)) return true;
                         return startSlot >= minSlot && startSlot <= maxSlot;
-                    }
-                    return true;
+                    };
+                }
+                break;
 
-                case AVOID_ROOM:
-                    if (params.length > 0 && params[0] instanceof String) {
-                        String forbiddenRoom = (String) params[0];
+            case AVOID_ROOM:
+                if (params.length > 0 && params[0] instanceof String) {
+                    String forbiddenRoom = (String) params[0];
+
+                    return (schedule, session, rooms, day, startSlot) -> {
+                        if (!session.getCourse().getCourseCode().equals(targetCourseCode)) return true;
+                        
                         for (ClassRoom room : rooms) {
                             if (room.getRoomName().equals(forbiddenRoom)) {
                                 return false;
                             }
                         }
-                    }
-                    return true;
+                        return true;
+                    };
+                }
+                break;
 
-                case SPECIFIC_ROOM:
-                     if (params.length > 0 && params[0] instanceof String) {
-                        String requiredRoom = (String) params[0];
-                        boolean found = false;
+            case SPECIFIC_ROOM:
+                if (params.length > 0 && params[0] instanceof String) {
+                    String requiredRoom = (String) params[0];
+
+                    return (schedule, session, rooms, day, startSlot) -> {
+                        if (!session.getCourse().getCourseCode().equals(targetCourseCode)) return true;
+
                         for (ClassRoom room : rooms) {
                             if (room.getRoomName().equals(requiredRoom)) {
-                                found = true;
-                                break;
+                                return true;
                             }
                         }
-                        return found;
-                     }
-                     return true;
+                        return false;
+                    };
+                }
+                break;
+        }
 
-                default:
-                    return true;
-            }
-        };
+        return null;
     }
 }

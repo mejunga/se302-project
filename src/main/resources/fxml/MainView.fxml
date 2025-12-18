@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.text.Font?>
+
+<BorderPane fx:id="mainBorderPane" 
+            xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            stylesheets="@../style/main.css"
+            fx:controller="com.app.controller.MainController"
+            prefHeight="700.0" prefWidth="1000.0">
+
+    <fx:define>
+        <ToggleGroup fx:id="navGroup" />
+    </fx:define>
+    
+    <top>
+        <HBox alignment="CENTER_LEFT" spacing="10" style="-fx-background-color: #2c3e50; -fx-padding: 15;">
+            <children>
+                <Label text="Exam Scheduler" style="-fx-text-fill: white;">
+                    <font>
+                        <Font name="System Bold" size="18.0" />
+                    </font>
+                </Label>
+
+                <Region HBox.hgrow="ALWAYS" />
+
+                <Button text="User Manual / Help" onAction="#handleOpenUserManual"
+                        style="-fx-background-color: transparent; -fx-text-fill: #ecf0f1; -fx-border-color: #7f8c8d; -fx-border-radius: 3; -fx-cursor: hand;">
+                    <tooltip>
+                        <Tooltip text="Click to open documentation PDF"/>
+                    </tooltip>
+                </Button>
+            </children>
+        </HBox>
+    </top>
+
+    <left>
+        <VBox spacing="0" style="-fx-background-color: #34495e; -fx-pref-width: 200;">
+            <children>
+                <ToggleButton fx:id="btnData" text="1. Load Data" 
+                              maxWidth="Infinity" alignment="CENTER_LEFT"
+                              onAction="#showDataView"
+                              toggleGroup="$navGroup"
+                              styleClass="sidebar-button">
+                    <padding><Insets top="15" right="15" bottom="15" left="20"/></padding>
+                </ToggleButton>
+
+                <ToggleButton fx:id="btnConfig" text="2. Configuration" 
+                              maxWidth="Infinity" alignment="CENTER_LEFT"
+                              onAction="#showConfigView"
+                              toggleGroup="$navGroup"
+                              styleClass="sidebar-button">
+                    <padding><Insets top="15" right="15" bottom="15" left="20"/></padding>
+                </ToggleButton>
+
+                <ToggleButton fx:id="btnSchedule" text="3. View Schedule" 
+                              maxWidth="Infinity" alignment="CENTER_LEFT"
+                              onAction="#showScheduleView"
+                              toggleGroup="$navGroup"
+                              styleClass="sidebar-button">
+                    <padding><Insets top="15" right="15" bottom="15" left="20"/></padding>
+                </ToggleButton>
+                
+                <Region VBox.vgrow="ALWAYS" />
+                
+                <Label fx:id="versionLabel" text="v1.0" textFill="#7f8c8d">
+                    <padding><Insets bottom="10" left="20"/></padding>
+                </Label>
+            </children>
+        </VBox>
+    </left>
+
+    <center>
+    </center>
+
+    <bottom>
+        <HBox style="-fx-background-color: #ecf0f1; -fx-padding: 5;">
+            <children>
+                <Label fx:id="statusLabel" text="Ready" textFill="#7f8c8d" />
+            </children>
+        </HBox>
+    </bottom>
+
+</BorderPane>

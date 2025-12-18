@@ -14,7 +14,7 @@ public class SchedulerService {
 
     private int minGapSlots = 0;       
     private int maxExamsPerDay = 50;   
-    private List<SchedulingConstraint> userConstraints;
+    private final List<SchedulingConstraint> userConstraints;
     
     private static final int MAX_STUDENT_EXAMS_PER_DAY = 2; 
     private static final int DAYS_IN_WEEK = 7;
@@ -24,6 +24,8 @@ public class SchedulerService {
         this.masterRepository = masterRepository;
         this.scheduleRepository = scheduleRepository;
         this.roomAllocator = new RoomAllocator();
+        
+        this.userConstraints = new ArrayList<>();
     }
 
     public void configure(int minGapMinutes, int maxExamsPerDay) {
@@ -37,7 +39,6 @@ public class SchedulerService {
         List<ExamSession> pendingSessions = new ArrayList<>(masterRepository.getPendingSessions());
         List<ClassRoom> allRooms = masterRepository.getAllClassRooms();
 
-        // Öğrenci sayısına göre büyükten küçüğe sıralama (Heuristic)
         pendingSessions.sort((s1, s2) -> Integer.compare(
                 s2.getCourse().getEnrolledStudents().size(), 
                 s1.getCourse().getEnrolledStudents().size()
@@ -94,8 +95,7 @@ public class SchedulerService {
              }
         }
 
-        boolean valid = checkAllConstraints(schedule, session, newRooms, newDay, newSlot);
-        return valid;
+        return checkAllConstraints(schedule, session, newRooms, newDay, newSlot);
     }
 
     private boolean checkAllConstraints(Schedule schedule, ExamSession currentSession, List<ClassRoom> rooms, int day, int startSlot) {
@@ -123,10 +123,10 @@ public class SchedulerService {
                     return false; 
                 }
                 if (startSlot >= otherEnd && (startSlot - otherEnd) < minGapSlots) {
-                    return false;
+                    return false; 
                 }
                 if (otherStart >= currentEnd && (otherStart - currentEnd) < minGapSlots) {
-                    return false;
+                    return false; 
                 }
             }
         }
@@ -143,11 +143,9 @@ public class SchedulerService {
             }
         }
 
-        if (this.userConstraints != null) {
-            for (SchedulingConstraint constraint : this.userConstraints) {
-                if (!constraint.check(schedule, currentSession, rooms, day, startSlot)) { 
-                    return false;
-                }
+        for (SchedulingConstraint constraint : userConstraints) {
+            if (!constraint.check(schedule, currentSession, rooms, day, startSlot)) { 
+                return false;
             }
         }
 
@@ -165,7 +163,10 @@ public class SchedulerService {
     }
 
     private boolean hasCommonStudents(ExamSession s1, ExamSession s2) {
-        Set<String> ids1 = s1.getCourse().getEnrolledStudents().stream().map(Student::getStudentID).collect(Collectors.toSet());
+        Set<String> ids1 = s1.getCourse().getEnrolledStudents().stream()
+                .map(Student::getStudentID)
+                .collect(Collectors.toSet());
+        
         for (Student s : s2.getCourse().getEnrolledStudents()) {
             if (ids1.contains(s.getStudentID())) return true;
         }
@@ -173,16 +174,13 @@ public class SchedulerService {
     }
 
     public void addConstraint(SchedulingConstraint constraint) {
-        if (this.userConstraints == null) {
-            this.userConstraints = new ArrayList<>();
+        if (constraint != null) {
+            this.userConstraints.add(constraint);
         }
-        this.userConstraints.add(constraint);
     }
 
     public void resetConstraints() {
-        if (this.userConstraints != null) {
-            this.userConstraints.clear();
-        }
+        this.userConstraints.clear();
     }
 
     private int getExamsCountInDay(Schedule schedule, int day) {

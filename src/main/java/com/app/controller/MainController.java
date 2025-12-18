@@ -1,88 +1,108 @@
 package com.app.controller;
 
-import com.app.repository.*;
+import com.app.repository.MasterDataRepository;
+import com.app.repository.ScheduleRepository;
 import com.app.service.SchedulerService;
+
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
+import javafx.scene.control.Label;
+import javafx.scene.control.ToggleButton;
+import javafx.scene.layout.BorderPane;
+import java.io.IOException;
+import java.net.URL;
 
 public class MainController {
-    private MasterDataRepository masterRepo;
-    private ScheduleRepository scheduleRepo;
+
+    @FXML private BorderPane mainBorderPane;
+    @FXML private Label statusLabel;
+    
+    @FXML private ToggleButton btnData;
+    @FXML private ToggleButton btnConfig;
+    @FXML private ToggleButton btnSchedule;
+
+    private MasterDataRepository masterRepository;
+    private ScheduleRepository scheduleRepository;
     private SchedulerService schedulerService;
 
-    public boolean onImportClick() {
-        // TODO Implement this function
-        return false;
-    }
-
-    public boolean onGenerateClick() {
-        // TODO Implement this function
-        return false;
-    }
-
-    public boolean onExportClick() {
-        // TODO Implement this function
-        return false;
-    }
-
-    public boolean onPrintClick() {
-        // TODO Implement this function
-        return false;
-    }
-
-    // Menu actions
     @FXML
-    public void handleImport(ActionEvent actionEvent) {
-        // TODO Implement this function
+    public void initialize() {
+        this.masterRepository = new MasterDataRepository();
+        this.scheduleRepository = new ScheduleRepository();
+        this.schedulerService = new SchedulerService(masterRepository, scheduleRepository);
+
+        loadView("HomeView");
+        
+        statusLabel.setText("Status: Welcome");
     }
 
     @FXML
-    public void handleExport(ActionEvent actionEvent) {
-        // TODO Implement this function
+    public void showDataView(ActionEvent event) {
+        if (btnData != null) btnData.setSelected(true);
+        loadView("LoadDataView");
+        statusLabel.setText("Status: Waiting for data...");
     }
 
     @FXML
-    public void handleSave(ActionEvent actionEvent) {
-        // TODO Implement this function
+    public void showConfigView(ActionEvent event) {
+        loadView("ConfigView");
+        statusLabel.setText("Status: Configuration mode");
     }
 
     @FXML
-    public void handleSaveAs(ActionEvent actionEvent) {
-        // TODO Implement this function
+    public void showScheduleView(ActionEvent event) {
+        if (btnSchedule != null) btnSchedule.setSelected(true);
+        loadView("ScheduleView");
+        statusLabel.setText("Status: Viewing schedule");
+    }
+    
+    @FXML
+    public void handleOpenUserManual(ActionEvent event) {
+
     }
 
-    @FXML
-    public void handleExit(ActionEvent actionEvent) {
-        System.exit(0);
-    }
+    private void loadView(String fxmlFileName) {
+        try {
+            URL resource = getClass().getResource("/fxml/" + fxmlFileName + ".fxml");
+            
+            if (resource == null) {
+                System.err.println("View not found: " + fxmlFileName);
+                statusLabel.setText("Error: " + fxmlFileName + " not found.");
+                return;
+            }
 
-    @FXML
-    public void handleUndo(ActionEvent actionEvent) {
-        // TODO Implement this function
-    }
+            FXMLLoader loader = new FXMLLoader(resource);
+            Parent view = loader.load();
+            
+            Object controller = loader.getController();
 
-    @FXML
-    public void handleSettings(ActionEvent actionEvent) {
-        // TODO Implement this function
-    }
+            if (controller instanceof LoadDataController) {
+                ((LoadDataController) controller).setRepository(this.masterRepository);
+            }
+            else if (controller instanceof ConfigController) {
+                ((ConfigController) controller).setDependencies(
+                    this.schedulerService, 
+                    this.masterRepository, 
+                    this 
+                );
+            }
+            else if (controller instanceof ScheduleController) {
+                ((ScheduleController) controller).setDependencies(
+                    this.schedulerService, 
+                    this.scheduleRepository
+                );
+            }
+            else if (controller instanceof HomeController) {
+                ((HomeController) controller).setMainController(this);
+            }
 
-    @FXML
-    public void handleGenerate(ActionEvent actionEvent) {
-        // TODO Implement this function
-    }
-
-    @FXML
-    public void handleCheckConflicts(ActionEvent actionEvent) {
-        // TODO Implement this function
-    }
-
-    @FXML
-    public void handleHelp(ActionEvent actionEvent) {
-        // TODO Implement this function
-    }
-
-    @FXML
-    public void handleAbout(ActionEvent actionEvent) {
-        // TODO Implement this function
+            mainBorderPane.setCenter(view);
+            
+        } catch (IOException e) {
+            e.printStackTrace();
+            statusLabel.setText("Error loading view: " + e.getMessage());
+        }
     }
 }

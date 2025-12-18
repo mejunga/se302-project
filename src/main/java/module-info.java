@@ -9,5 +9,5 @@ module com.app {
     exports com.app;
 
     opens com.app.controller to javafx.fxml;
-    opens com.app.model to com.google.gson;
+    opens com.app.model to com.google.gson, javafx.base;
 }
