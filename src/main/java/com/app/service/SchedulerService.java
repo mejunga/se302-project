@@ -1,39 +1,104 @@
 package com.app.service;
 
 import com.app.model.*;
+import com.app.model.Schedule.SessionPlacement;
 import com.app.repository.*;
 
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.stream.Collectors;
 
 public class SchedulerService {
+    
+    public static class SchedulerConfig {
+        private final LocalDate startDate;
+        private final LocalDate endDate;
+        private final LocalTime dayStartTime;
+        private final LocalTime dayEndTime;
+        private final int minGapMinutes;
+        private final int maxExamsPerDay;
+        private final int slotDurationMinutes;
+        private final List<TimeBlock> timeBlocks;
+
+        public SchedulerConfig(LocalDate startDate, LocalDate endDate, 
+                               LocalTime dayStartTime, LocalTime dayEndTime, 
+                               int minGapMinutes, int maxExamsPerDay,
+                               List<TimeBlock> timeBlocks) { 
+            this.startDate = startDate;
+            this.endDate = endDate;
+            this.dayStartTime = dayStartTime;
+            this.dayEndTime = dayEndTime;
+            this.minGapMinutes = minGapMinutes;
+            this.maxExamsPerDay = maxExamsPerDay;
+            this.slotDurationMinutes = 5;
+            this.timeBlocks = (timeBlocks != null) ? timeBlocks : new ArrayList<>();
+        }
+        
+        public SchedulerConfig(LocalDate startDate, LocalDate endDate, 
+                               LocalTime dayStartTime, LocalTime dayEndTime, 
+                               int minGapMinutes, int maxExamsPerDay) {
+            this(startDate, endDate, dayStartTime, dayEndTime, minGapMinutes, maxExamsPerDay, new ArrayList<>());
+        }
+
+        public int calculateTotalDays() {
+            return (int) ChronoUnit.DAYS.between(startDate, endDate) + 1;
+        }
+
+        public int calculateSlotsPerDay() {
+            long minutesInDay = ChronoUnit.MINUTES.between(dayStartTime, dayEndTime);
+            return (int) (minutesInDay / slotDurationMinutes);
+        }
+
+        public int calculateMinGapSlots() {
+            return minGapMinutes / slotDurationMinutes;
+        }
+
+        public List<TimeBlock> getTimeBlocks() {
+            return timeBlocks;
+        }
+    }
 
     private final MasterDataRepository masterRepository;
     private final ScheduleRepository scheduleRepository;
     private final RoomAllocator roomAllocator;
 
-    private int minGapSlots = 0;       
-    private int maxExamsPerDay = 50;   
+    private SchedulerConfig currentConfig;
+    private int dynamicTotalDays;
+    private int dynamicSlotsPerDay;
+    private int dynamicMinGapSlots;
+    private int dynamicMaxExamsPerDay;
+
     private final List<SchedulingConstraint> userConstraints;
     
     private static final int MAX_STUDENT_EXAMS_PER_DAY = 2; 
-    private static final int DAYS_IN_WEEK = 7;
-    private static final int SLOTS_PER_DAY = 96;
 
     public SchedulerService(MasterDataRepository masterRepository, ScheduleRepository scheduleRepository) {
         this.masterRepository = masterRepository;
         this.scheduleRepository = scheduleRepository;
         this.roomAllocator = new RoomAllocator();
-        
         this.userConstraints = new ArrayList<>();
     }
 
-    public void configure(int minGapMinutes, int maxExamsPerDay) {
-        this.minGapSlots = minGapMinutes / 5;
-        this.maxExamsPerDay = maxExamsPerDay;
+    public void updateConfiguration(SchedulerConfig config) {
+        this.currentConfig = config;
+        this.dynamicTotalDays = config.calculateTotalDays();
+        this.dynamicSlotsPerDay = config.calculateSlotsPerDay();
+        this.dynamicMinGapSlots = config.calculateMinGapSlots();
+        this.dynamicMaxExamsPerDay = config.maxExamsPerDay;
+        
+        System.out.println("Scheduler Config Updated:");
+        System.out.println("Total Days: " + dynamicTotalDays);
+        System.out.println("Slots Per Day: " + dynamicSlotsPerDay);
+        System.out.println("Active TimeBlocks: " + config.getTimeBlocks().size());
     }
 
     public void generateSchedule() {        
+        if (currentConfig == null) {
+            throw new IllegalStateException("Scheduler configuration has not been set.");
+        }
+
         scheduleRepository.clearPossibleSchedules();
 
         List<ExamSession> pendingSessions = new ArrayList<>(masterRepository.getPendingSessions());
@@ -44,27 +109,62 @@ public class SchedulerService {
                 s1.getCourse().getEnrolledStudents().size()
         ));
 
-        Schedule initialSchedule = new Schedule(allRooms, DAYS_IN_WEEK, SLOTS_PER_DAY);
+        Schedule initialSchedule = new Schedule(allRooms, dynamicTotalDays, dynamicSlotsPerDay);
+        
         backtrack(initialSchedule, pendingSessions, 0, allRooms);
+    }
+
+    public boolean attemptMove(Schedule schedule, ExamSession session, List<ClassRoom> newRooms, int newDay, int newSlot) {
+        SessionPlacement oldPlacement = schedule.getSessionPlacement(session);
+        if (oldPlacement == null) return false; 
+
+        schedule.removeSession(session);
+
+        if (!isSlotInAllowedTimeBlock(newDay, newSlot, session.getDurationSlots())) {
+            schedule.assignSession(session, oldPlacement.rooms, oldPlacement.day, oldPlacement.startSlot);
+            return false;
+        }
+
+        boolean isRoomAvailable = true;
+        for (ClassRoom room : newRooms) {
+            if (!schedule.isRoomAvailable(room, newDay, newSlot, session.getDurationSlots())) {
+                isRoomAvailable = false;
+                break;
+            }
+        }
+
+        boolean constraintsPassed = checkAllConstraints(schedule, session, newRooms, newDay, newSlot);
+
+        if (isRoomAvailable && constraintsPassed) {
+            schedule.assignSession(session, newRooms, newDay, newSlot);
+            return true;
+        } else {
+            schedule.assignSession(session, oldPlacement.rooms, oldPlacement.day, oldPlacement.startSlot);
+            return false;
+        }
     }
 
     private boolean backtrack(Schedule schedule, List<ExamSession> exams, int index, List<ClassRoom> allRooms) {
         if (index == exams.size()) {
             scheduleRepository.addPossibleSchedule(schedule.deepCopy());
-            return true;
+            return scheduleRepository.getPossibleSchedules().size() >= 5; 
         }
 
         ExamSession currentSession = exams.get(index);
         int duration = currentSession.getDurationSlots();
         int requiredCapacity = currentSession.getCourse().getEnrolledStudents().size();
 
-        for (int day = 0; day < DAYS_IN_WEEK; day++) {
+        for (int day = 0; day < dynamicTotalDays; day++) {
             
-            if (getExamsCountInDay(schedule, day) >= maxExamsPerDay) {
+            if (getExamsCountInDay(schedule, day) >= dynamicMaxExamsPerDay) {
                 continue;
             }
 
-            for (int slot = 0; slot <= SLOTS_PER_DAY - duration; slot++) {
+            for (int slot = 0; slot <= dynamicSlotsPerDay - duration; slot += 6) {
+
+                if (!isSlotInAllowedTimeBlock(day, slot, duration)) {
+                    continue;
+                }
 
                 List<ClassRoom> availableRooms = getAvailableRooms(schedule, allRooms, day, slot, duration);
                 List<List<ClassRoom>> roomCombinations = roomAllocator.findValidCombinations(availableRooms, requiredCapacity);
@@ -77,7 +177,6 @@ public class SchedulerService {
                         if (backtrack(schedule, exams, index + 1, allRooms)) {
                             return true;
                         }
-
                         schedule.removeSession(currentSession);
                     }
                 }
@@ -86,16 +185,29 @@ public class SchedulerService {
         return false;
     }
 
-    public boolean isValidMove(Schedule schedule, ExamSession session, List<ClassRoom> newRooms, int newDay, int newSlot) {
-        schedule.removeSession(session);
-
-        for(ClassRoom room : newRooms) {
-             if (!schedule.isRoomAvailable(room, newDay, newSlot, session.getDurationSlots())) {
-                 return false; 
-             }
+    private boolean isSlotInAllowedTimeBlock(int dayIndex, int startSlot, int durationSlots) {
+        if (currentConfig.getTimeBlocks().isEmpty()) {
+            return true;
         }
 
-        return checkAllConstraints(schedule, session, newRooms, newDay, newSlot);
+        LocalDate currentDate = currentConfig.startDate.plusDays(dayIndex);
+        int dayOfWeekValue = currentDate.getDayOfWeek().getValue();
+
+        LocalTime slotStartTime = currentConfig.dayStartTime.plusMinutes((long) startSlot * currentConfig.slotDurationMinutes);
+        LocalTime slotEndTime = slotStartTime.plusMinutes((long) durationSlots * currentConfig.slotDurationMinutes);
+
+        for (TimeBlock block : currentConfig.getTimeBlocks()) {
+            if (block.getDays().contains(dayOfWeekValue)) {
+                
+                boolean startsAfterOrAtBlockStart = !slotStartTime.isBefore(block.getStartTime());
+                boolean endsBeforeOrAtBlockEnd = !slotEndTime.isAfter(block.getEndTime());
+
+                if (startsAfterOrAtBlockStart && endsBeforeOrAtBlockEnd) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     private boolean checkAllConstraints(Schedule schedule, ExamSession currentSession, List<ClassRoom> rooms, int day, int startSlot) {
@@ -104,7 +216,7 @@ public class SchedulerService {
         int currentEnd = startSlot + duration;
 
         List<ExamSession> dailySessions = new ArrayList<>();
-        for (Map.Entry<ExamSession, Schedule.SessionPlacement> entry : schedule.getAssignedSessions().entrySet()) {
+        for (Map.Entry<ExamSession, SessionPlacement> entry : schedule.getAssignedSessions().entrySet()) {
             if (entry.getValue().day == day) {
                 dailySessions.add(entry.getKey());
             }
@@ -114,7 +226,7 @@ public class SchedulerService {
             if (otherSession.equals(currentSession)) continue;
 
             if (hasCommonStudents(currentSession, otherSession)) {
-                Schedule.SessionPlacement placement = schedule.getSessionPlacement(otherSession);
+                SessionPlacement placement = schedule.getSessionPlacement(otherSession);
                 int otherStart = placement.startSlot;
                 int otherDuration = otherSession.getDurationSlots();
                 int otherEnd = otherStart + otherDuration;
@@ -122,10 +234,12 @@ public class SchedulerService {
                 if (startSlot < otherEnd && currentEnd > otherStart) {
                     return false; 
                 }
-                if (startSlot >= otherEnd && (startSlot - otherEnd) < minGapSlots) {
+
+                if (startSlot >= otherEnd && (startSlot - otherEnd) < dynamicMinGapSlots) {
                     return false; 
                 }
-                if (otherStart >= currentEnd && (otherStart - currentEnd) < minGapSlots) {
+
+                if (otherStart >= currentEnd && (otherStart - currentEnd) < dynamicMinGapSlots) {
                     return false; 
                 }
             }
@@ -185,7 +299,7 @@ public class SchedulerService {
 
     private int getExamsCountInDay(Schedule schedule, int day) {
         int count = 0;
-        for (Schedule.SessionPlacement placement : schedule.getAssignedSessions().values()) {
+        for (SessionPlacement placement : schedule.getAssignedSessions().values()) {
             if (placement.day == day) {
                 count++;
             }

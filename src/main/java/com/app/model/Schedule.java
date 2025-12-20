@@ -3,9 +3,12 @@ package com.app.model;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 public class Schedule {
     
+    private String id;
+
     public static class SessionPlacement {
         public final int day;
         public final int startSlot;
@@ -25,6 +28,8 @@ public class Schedule {
     private int slotsPerDay;
 
     public Schedule(){
+        this.id = UUID.randomUUID().toString(); 
+        
         this.timetables = null;
         this.assignedSessions = null;
         this.days = 0;
@@ -32,6 +37,8 @@ public class Schedule {
     }
 
     public Schedule(List<ClassRoom> rooms, int days, int slotsPerDay) {
+        this.id = UUID.randomUUID().toString();
+        
         this.days = days;
         this.slotsPerDay = slotsPerDay;
         this.timetables = new HashMap<>();
@@ -45,10 +52,20 @@ public class Schedule {
     private Schedule(Map<ClassRoom, ExamSession[][]> timetables, 
                      Map<ExamSession, SessionPlacement> assignedSessions, 
                      int days, int slotsPerDay) {
+        this.id = UUID.randomUUID().toString();
+        
         this.timetables = timetables;
         this.assignedSessions = assignedSessions;
         this.days = days;
         this.slotsPerDay = slotsPerDay;
+    }
+    
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
     }
 
     public void assignSession(ExamSession session, List<ClassRoom> rooms, int day, int startSlot){
@@ -56,7 +73,7 @@ public class Schedule {
 
         for (ClassRoom room : rooms){
             if (!isRoomAvailable(room, day, startSlot, duration)){
-                System.err.println("Room " + room.getRoomName() + " is not available.");
+                System.err.println("Error: Room " + room.getRoomName() + " is not available during assignment.");
                 return;
             }
         }
@@ -107,7 +124,7 @@ public class Schedule {
         }
         return true;
     }
-
+    
     public Schedule deepCopy() {
         Map<ClassRoom, ExamSession[][]> newTimetables = new HashMap<>();
 
@@ -121,7 +138,9 @@ public class Schedule {
             }
             newTimetables.put(room, newGrid);
         }
+        
         Map<ExamSession, SessionPlacement> newAssignedSessions = new HashMap<>(this.assignedSessions);
+        
         return new Schedule(newTimetables, newAssignedSessions, this.days, this.slotsPerDay);
     }
 

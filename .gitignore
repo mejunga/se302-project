@@ -43,3 +43,6 @@ Thumbs.db
 **/out/
 **/bin/
 !gradle/wrapper/gradle-wrapper.jar
+
+# Temporary debugging folders
+**/debug

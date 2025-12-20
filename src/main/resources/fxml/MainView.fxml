@@ -65,10 +65,6 @@
                 </ToggleButton>
                 
                 <Region VBox.vgrow="ALWAYS" />
-                
-                <Label fx:id="versionLabel" text="v1.0" textFill="#7f8c8d">
-                    <padding><Insets bottom="10" left="20"/></padding>
-                </Label>
             </children>
         </VBox>
     </left>

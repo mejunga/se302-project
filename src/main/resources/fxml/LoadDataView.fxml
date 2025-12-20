@@ -41,7 +41,7 @@
         <TextField fx:id="txtRoomsPath" promptText="Select rooms.csv..." editable="false" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
         <Button text="Browse..." onAction="#browseRooms" GridPane.rowIndex="2" GridPane.columnIndex="2"/>
 
-        <Label text="Attendance CSV:" GridPane.rowIndex="3" GridPane.columnIndex="0" style="-fx-font-weight: bold;"/>
+        <Label text="Attendance Lists CSV:" GridPane.rowIndex="3" GridPane.columnIndex="0" style="-fx-font-weight: bold;"/>
         <TextField fx:id="txtAttendancePath" promptText="Select attendance.csv..." editable="false" GridPane.rowIndex="3" GridPane.columnIndex="1"/>
         <Button text="Browse..." onAction="#browseAttendance" GridPane.rowIndex="3" GridPane.columnIndex="2"/>
     </GridPane>

@@ -13,6 +13,8 @@ import javafx.scene.control.ToggleButton;
 import javafx.scene.layout.BorderPane;
 import java.io.IOException;
 import java.net.URL;
+import java.util.HashMap;
+import java.util.Map;
 
 public class MainController {
 
@@ -27,40 +29,62 @@ public class MainController {
     private ScheduleRepository scheduleRepository;
     private SchedulerService schedulerService;
 
-    @FXML
-    public void initialize() {
+    private Map<String, Parent> viewCache = new HashMap<>();
+
+    @FXML public void showDataView(ActionEvent event) {
+        if (btnData != null) btnData.setSelected(true);
+        loadView("LoadDataView");
+        statusLabel.setText("Status: Waiting for data...");
+    }
+
+    @FXML public void showConfigView(ActionEvent event) {
+        if (btnConfig != null) btnConfig.setSelected(true);
+        loadView("ConfigView");
+        statusLabel.setText("Status: Configuration mode");
+    }
+
+    @FXML public void showScheduleView(ActionEvent event) {
+        if (btnSchedule != null) btnSchedule.setSelected(true);
+        loadView("ScheduleView");
+        statusLabel.setText("Status: Viewing schedule");
+    }
+    
+    @FXML public void handleOpenUserManual(ActionEvent event) {
+
+    }
+
+    @FXML public void initialize() {
         this.masterRepository = new MasterDataRepository();
         this.scheduleRepository = new ScheduleRepository();
         this.schedulerService = new SchedulerService(masterRepository, scheduleRepository);
+
+        btnData.setDisable(false);
+        btnConfig.setDisable(true);
+        btnSchedule.setDisable(true);
 
         loadView("HomeView");
         
         statusLabel.setText("Status: Welcome");
     }
 
-    @FXML
-    public void showDataView(ActionEvent event) {
-        if (btnData != null) btnData.setSelected(true);
-        loadView("LoadDataView");
-        statusLabel.setText("Status: Waiting for data...");
+    public void enableConfigStage() {
+        btnConfig.setDisable(false);
+        showConfigView(null);
     }
 
-    @FXML
-    public void showConfigView(ActionEvent event) {
-        loadView("ConfigView");
-        statusLabel.setText("Status: Configuration mode");
+    public void enableScheduleStage() {
+        btnSchedule.setDisable(false);
+        showScheduleView(null);
     }
 
-    @FXML
-    public void showScheduleView(ActionEvent event) {
-        if (btnSchedule != null) btnSchedule.setSelected(true);
-        loadView("ScheduleView");
-        statusLabel.setText("Status: Viewing schedule");
-    }
-    
-    @FXML
-    public void handleOpenUserManual(ActionEvent event) {
+    public void resetDownstreamStages() {
+        viewCache.remove("ConfigView");
+        viewCache.remove("ScheduleView");
 
+        btnConfig.setDisable(true);
+        btnSchedule.setDisable(true);
+        
+        setStatus("Previous stages reset due to new data load.");
     }
 
     public void setStatus(String message) {
@@ -71,6 +95,11 @@ public class MainController {
 
     private void loadView(String fxmlFileName) {
         try {
+            if (viewCache.containsKey(fxmlFileName)) {
+                mainBorderPane.setCenter(viewCache.get(fxmlFileName));
+                return;
+            }
+
             URL resource = getClass().getResource("/fxml/" + fxmlFileName + ".fxml");
             
             if (resource == null) {
@@ -85,7 +114,7 @@ public class MainController {
             Object controller = loader.getController();
 
             if (controller instanceof LoadDataController) {
-                ((LoadDataController) controller).setRepository(this.masterRepository);
+                ((LoadDataController) controller).setDependencies(this.masterRepository, this);
             }
             else if (controller instanceof ConfigController) {
                 ((ConfigController) controller).setDependencies(
@@ -103,6 +132,8 @@ public class MainController {
             else if (controller instanceof HomeController) {
                 ((HomeController) controller).setMainController(this);
             }
+
+            viewCache.put(fxmlFileName, view);
 
             mainBorderPane.setCenter(view);
             

@@ -1,174 +1,429 @@
 package com.app.controller;
 
-import com.app.model.ClassRoom;
 import com.app.model.Course;
 import com.app.model.Student;
+import com.app.model.TimeBlock;
 import com.app.repository.MasterDataRepository;
 import com.app.service.SchedulerService;
+import com.app.service.SchedulerService.SchedulerConfig;
 
+import javafx.animation.PauseTransition;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
+import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.VBox;
+import javafx.stage.Modality;
+import javafx.stage.Stage;
+import javafx.util.Duration;
 import javafx.util.StringConverter;
-
+import java.io.IOException;
+import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 public class ConfigController {
 
     @FXML private TableView<Course> courseTable;
     @FXML private TableColumn<Course, String> colCourseCode;
+    @FXML private TableColumn<Course, Integer> colDuration;
     @FXML private TableColumn<Course, String> colEnrolledStudents;
 
-    @FXML private TableView<Student> studentTable;
-    @FXML private TableColumn<Student, String> colStudentId;
-    @FXML private TableColumn<Student, String> colEnrolledCourses;
-
-    @FXML private TableView<ClassRoom> roomTable;
-    @FXML private TableColumn<ClassRoom, String> colRoomName;
-    @FXML private TableColumn<ClassRoom, Integer> colCapacity;
-
+    @FXML private DatePicker dateStartDate;
+    @FXML private DatePicker dateEndDate;
     @FXML private Spinner<LocalTime> spinDayStartTime;
     @FXML private Spinner<LocalTime> spinDayEndTime;
-    @FXML private Spinner<Integer> spinMinGap;
-    @FXML private Spinner<Integer> spinExamDuration;
-
-    @FXML private ComboBox<Course> comboCourses;
-    @FXML private ComboBox<String> comboConstraintType;
     
-    @FXML private VBox dynamicInputBox;
-    @FXML private ComboBox<String> comboDay;
-    @FXML private TextField txtTimeStart;
-    @FXML private TextField txtTimeEnd; 
-    @FXML private TextField txtRoomName;
+    @FXML private Spinner<Integer> spinMinGap;
+    @FXML private Spinner<Integer> spinMaxExams;
 
+    @FXML private Label lblSelectedCourse;
+    @FXML private Spinner<Integer> spinExamDuration;
+    
     @FXML private ListView<String> listConstraints;
+    @FXML private Button btnAddConstraint;
+    @FXML private Button btnRemoveConstraint;
+
+    @FXML private ListView<String> listGlobalConstraints;
+    @FXML private Button btnAddGlobalConstraint;
+    @FXML private Button btnRemoveGlobalConstraint;
+    
     @FXML private Button btnGenerate;
 
     private SchedulerService schedulerService;
     private MasterDataRepository masterRepository;
     private MainController mainController;
 
-    private Map<String, Integer> courseDurations = new HashMap<>();
+    private Map<String, Integer> courseDurationMap = new HashMap<>();
+    private Map<String, List<String>> courseConstraintsMap = new HashMap<>();
+    private List<String> globalConstraintsList = new ArrayList<>();
 
-    @FXML
-    public void initialize() {
-        setupTableFactories();
-        setupTimeSpinners();
+    private static final int DEFAULT_MAX_EXAMS = 50;
+    
+    private static final LocalTime HARD_LIMIT_START = LocalTime.of(8, 0);
+    private static final LocalTime HARD_LIMIT_END = LocalTime.of(21, 0);
+    private static final int MIN_GLOBAL_DURATION_HOURS = 5;
 
-        spinExamDuration.setValueFactory(new SpinnerValueFactory.IntegerSpinnerValueFactory(15, 180, 60, 5));
-        
-        comboConstraintType.setItems(FXCollections.observableArrayList(
-            "Avoid Specific Day", "Avoid Time Range", "Forbidden Room"
-        ));
-
-        comboConstraintType.setOnAction(e -> handleVisibility());
+    @FXML public void handleAddConstraint(ActionEvent event) {
+        Course selected = courseTable.getSelectionModel().getSelectedItem();
+        if (selected == null) return;
+        openConstraintModal(selected.getCourseCode(), false);
     }
 
+    @FXML public void handleRemoveConstraint(ActionEvent event) {
+        Course selected = courseTable.getSelectionModel().getSelectedItem();
+        int idx = listConstraints.getSelectionModel().getSelectedIndex();
+        
+        if (selected != null && idx >= 0) {
+            String removedItem = listConstraints.getItems().remove(idx);
+            if (courseConstraintsMap.containsKey(selected.getCourseCode())) {
+                courseConstraintsMap.get(selected.getCourseCode()).remove(removedItem);
+            }
+            logStatus("Course constraint removed.");
+        }
+    }
+    
+    @FXML public void handleAddGlobalConstraint(ActionEvent event) {
+        openConstraintModal(null, true);
+    }
+
+    @FXML public void handleRemoveGlobalConstraint(ActionEvent event) {
+        int idx = listGlobalConstraints.getSelectionModel().getSelectedIndex();
+        if (idx >= 0) {
+            String removed = listGlobalConstraints.getItems().remove(idx);
+            globalConstraintsList.remove(removed);
+            logStatus("Global constraint removed.");
+        }
+    }
+
+    @FXML public void handleViewStudents(ActionEvent event) {
+        if (masterRepository == null) return;
+        List<String> displayData = masterRepository.getAllStudents().stream()
+                .map(s -> "Student ID: " + s.getStudentID())
+                .collect(Collectors.toList());
+        showDataPopup("All Students", displayData);
+    }
+    
+    @FXML public void handleViewRooms(ActionEvent event) {
+        if (masterRepository == null) return;
+        List<String> displayData = masterRepository.getAllClassRooms().stream()
+                .map(r -> r.getRoomName() + " (Capacity: " + r.getCapacity() + ")")
+                .collect(Collectors.toList());
+        showDataPopup("All Rooms", displayData);
+    }
+
+    @FXML public void handleGenerate(ActionEvent event) {
+        if (masterRepository == null) return;
+        
+        LocalDate startDate = dateStartDate.getValue();
+        LocalDate endDate = dateEndDate.getValue();
+        LocalTime startTime = spinDayStartTime.getValue();
+        LocalTime endTime = spinDayEndTime.getValue();
+
+        if (startDate == null || endDate == null) {
+            showError("Missing Dates", "Please select start and end dates.");
+            return;
+        }
+
+        if (startTime == null || endTime == null || !endTime.isAfter(startTime)) {
+            showError("Invalid Time", "End time must be after start time.");
+            return;
+        }
+
+        Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
+        confirm.setTitle("Confirm Schedule Generation");
+        confirm.setHeaderText("Ready to Generate?");
+        confirm.setContentText("Generating schedule from " + startDate + " to " + endDate + ".\n" +
+                               "Daily hours: " + startTime + " - " + endTime + "\n" +
+                               "Proceed?");
+
+        Optional<ButtonType> result = confirm.showAndWait();
+
+        if (result.isPresent() && result.get() == ButtonType.OK) {
+            Alert progressAlert = new Alert(Alert.AlertType.INFORMATION);
+            progressAlert.setTitle("Processing");
+            progressAlert.setHeaderText(null);
+            progressAlert.setContentText("Schedules are generating, please wait...");
+            progressAlert.getDialogPane().lookupButton(ButtonType.OK).setVisible(false);
+            progressAlert.show();
+
+            Task<Void> task = new Task<>() {
+                @Override
+                protected Void call() throws Exception {
+                    List<Integer> allDays = Arrays.asList(1, 2, 3, 4, 5, 6, 7);
+                    TimeBlock globalBlock = new TimeBlock(allDays, startTime, endTime);
+                    List<TimeBlock> blocks = new ArrayList<>();
+                    blocks.add(globalBlock);
+
+                    int minGap = spinMinGap.getValue();
+                    int maxExams = spinMaxExams.getValue();
+
+                    SchedulerConfig config = new SchedulerConfig(
+                        startDate, endDate, startTime, endTime, minGap, maxExams, blocks 
+                    );
+
+                    schedulerService.updateConfiguration(config);
+                    schedulerService.generateSchedule();
+                    
+                    Thread.sleep(1000);
+                    return null;
+                }
+            };
+
+            task.setOnSucceeded(e -> {
+                PauseTransition delay = new PauseTransition(Duration.seconds(0.5));
+                delay.setOnFinished(ev -> {
+                    progressAlert.close(); 
+                    if (mainController != null) {
+                        mainController.setStatus("Schedule Generated Successfully!");
+                        mainController.enableScheduleStage();
+                    }
+                });
+                delay.play();
+            });
+
+            task.setOnFailed(e -> {
+                progressAlert.close();
+                showError("Generation Failed", task.getException().getMessage());
+                task.getException().printStackTrace();
+            });
+
+            new Thread(task).start();
+        }
+    }
+
+    @FXML public void initialize() {
+        setupTableFactories();
+        setupGlobalSpinners();
+        setupDatePickers();
+        setupExamDurationSpinner();
+        setRightPanelDisable(true);
+        
+        courseTable.getSelectionModel().selectedItemProperty().addListener((obs, oldVal, newVal) -> {
+            if (newVal != null) {
+                handleCourseSelection(newVal);
+            }
+        });
+
+        btnRemoveGlobalConstraint.setDisable(true); 
+        listGlobalConstraints.getSelectionModel().selectedItemProperty().addListener((obs, oldVal, newVal) -> {
+            btnRemoveGlobalConstraint.setDisable(newVal == null);
+        });
+
+        btnRemoveConstraint.setDisable(true); 
+        listConstraints.getSelectionModel().selectedItemProperty().addListener((obs, oldVal, newVal) -> {
+            btnRemoveConstraint.setDisable(newVal == null);
+        });
+    }
+
+    private void setupGlobalSpinners() {
+        setupTimeSpinnerFactory(spinDayStartTime, LocalTime.of(9, 0));
+        setupTimeSpinnerFactory(spinDayEndTime, LocalTime.of(17, 0));
+        
+        spinDayStartTime.valueProperty().addListener((obs, oldVal, newVal) -> {
+            if (newVal == null) return;
+
+            if (newVal.isBefore(HARD_LIMIT_START)) {
+                spinDayStartTime.getValueFactory().setValue(HARD_LIMIT_START);
+                return;
+            }
+
+            LocalTime currentEnd = spinDayEndTime.getValue();
+            LocalTime limit = currentEnd.minusHours(MIN_GLOBAL_DURATION_HOURS);
+            if (newVal.isAfter(limit)) {
+                spinDayStartTime.getValueFactory().setValue(limit);
+            }
+        });
+
+        spinDayEndTime.valueProperty().addListener((obs, oldVal, newVal) -> {
+            if (newVal == null) return;
+
+            if (newVal.isAfter(HARD_LIMIT_END)) {
+                spinDayEndTime.getValueFactory().setValue(HARD_LIMIT_END);
+                return;
+            }
+
+            LocalTime currentStart = spinDayStartTime.getValue();
+            LocalTime limit = currentStart.plusHours(MIN_GLOBAL_DURATION_HOURS);
+            if (newVal.isBefore(limit)) {
+                spinDayEndTime.getValueFactory().setValue(limit);
+            }
+        });
+
+        spinMinGap.setValueFactory(new SpinnerValueFactory.IntegerSpinnerValueFactory(0, 120, 30, 5));
+        spinMaxExams.setValueFactory(new SpinnerValueFactory.IntegerSpinnerValueFactory(1, 500, DEFAULT_MAX_EXAMS, 1));
+    }
+    
+    private void setupTimeSpinnerFactory(Spinner<LocalTime> spinner, LocalTime initial) {
+        SpinnerValueFactory<LocalTime> factory = new SpinnerValueFactory<>() {
+            { setValue(initial); }
+            @Override public void decrement(int steps) { 
+                if(getValue()!=null) setValue(getValue().minusMinutes(15 * steps)); 
+            }
+            @Override public void increment(int steps) { 
+                if(getValue()!=null) setValue(getValue().plusMinutes(15 * steps)); 
+            }
+        };
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm");
+        factory.setConverter(new StringConverter<>() {
+            @Override public String toString(LocalTime time) { return time == null ? "" : formatter.format(time); }
+            @Override public LocalTime fromString(String s) { return LocalTime.parse(s, formatter); }
+        });
+        spinner.setValueFactory(factory);
+        spinner.setEditable(true);
+    }
+
+    private void openConstraintModal(String courseCode, boolean isGlobal) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/ConstraintModal.fxml"));
+            Parent root = loader.load();
+            ConstraintModalController modalCtrl = loader.getController();
+            
+            List<String> allRoomNames = (masterRepository != null) 
+                ? masterRepository.getAllClassRooms().stream().map(r -> r.getRoomName()).collect(Collectors.toList())
+                : new ArrayList<>();
+            modalCtrl.setRooms(allRoomNames);
+
+            LocalTime currentStart = spinDayStartTime.getValue();
+            LocalTime currentEnd = spinDayEndTime.getValue();
+            
+            if (currentStart == null) currentStart = LocalTime.of(9, 0);
+            if (currentEnd == null) currentEnd = LocalTime.of(17, 0);
+
+            modalCtrl.setupTimeSpinners(currentStart, currentEnd);
+
+            if (isGlobal) {
+                modalCtrl.setGlobalMode();
+            } else {
+                modalCtrl.setCourseCode(courseCode);
+            }
+
+            Stage stage = new Stage();
+            stage.setTitle(isGlobal ? "Add Global Constraint" : "Add Course Constraint");
+            stage.initModality(Modality.APPLICATION_MODAL);
+            stage.setScene(new Scene(root));
+            stage.showAndWait();
+            
+            String result = modalCtrl.getResult();
+            if (result != null) {
+                if (isGlobal) {
+                    listGlobalConstraints.getItems().add(result);
+                    globalConstraintsList.add(result);
+                    logStatus("Global Constraint added.");
+                } else {
+                    listConstraints.getItems().add(result);
+                    courseConstraintsMap.computeIfAbsent(courseCode, k -> new ArrayList<>()).add(result);
+                    logStatus("Course Constraint added.");
+                }
+            }
+        } catch (IOException e) { e.printStackTrace(); logStatus("Error opening constraint window."); }
+    }
+
+    private void setupDatePickers() {
+        String displayPattern = "dd/MM/yyyy";
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern(displayPattern);
+        StringConverter<LocalDate> converter = new StringConverter<>() {
+            @Override public String toString(LocalDate date) { return (date != null) ? formatter.format(date) : ""; }
+            @Override public LocalDate fromString(String string) {
+                if (string != null && !string.trim().isEmpty()) {
+                    try { return LocalDate.parse(string.replace('.', '/'), formatter); } catch (Exception e) { return null; }
+                } return null;
+            }
+        };
+        dateStartDate.setConverter(converter); dateEndDate.setConverter(converter);
+        dateStartDate.setPromptText("dd/MM/yyyy"); dateEndDate.setPromptText("dd/MM/yyyy");
+        dateStartDate.setDayCellFactory(picker -> new DateCell() {
+            @Override public void updateItem(LocalDate date, boolean empty) {
+                super.updateItem(date, empty);
+                setDisable(empty || date.compareTo(LocalDate.now().plusDays(1)) < 0);
+            }
+        });
+        dateEndDate.setDayCellFactory(picker -> new DateCell() {
+            @Override public void updateItem(LocalDate date, boolean empty) {
+                super.updateItem(date, empty);
+                LocalDate start = dateStartDate.getValue();
+                setDisable(empty || date.compareTo(start != null ? start : LocalDate.now().plusDays(1)) < 0);
+            }
+        });
+        dateStartDate.valueProperty().addListener((obs, oldVal, newVal) -> {
+            if (newVal != null && dateEndDate.getValue() != null && dateEndDate.getValue().isBefore(newVal)) dateEndDate.setValue(null);
+        });
+    }
+    
     private void setupTableFactories() {
         colCourseCode.setCellValueFactory(new PropertyValueFactory<>("courseCode"));
         colEnrolledStudents.setCellValueFactory(cellData -> {
-            String ids = cellData.getValue().getEnrolledStudents().stream()
-                    .map(Student::getStudentID)
-                    .collect(Collectors.joining("; "));
+            List<Student> students = cellData.getValue().getEnrolledStudents();
+            String ids = students.stream().map(Student::getStudentID).limit(5).collect(Collectors.joining(", ")) + (students.size() > 5 ? "..." : "");
             return new SimpleStringProperty(ids);
         });
-
-        colStudentId.setCellValueFactory(new PropertyValueFactory<>("studentID"));
-        colEnrolledCourses.setCellValueFactory(cellData -> {
-            String codes = cellData.getValue().getEnrolledCourses().stream()
-                    .map(Course::getCourseCode)
-                    .collect(Collectors.joining("; "));
-            return new SimpleStringProperty(codes);
+        colDuration.setCellValueFactory(cellData -> {
+            String code = cellData.getValue().getCourseCode();
+            Integer dur = courseDurationMap.getOrDefault(code, 60);
+            return new SimpleObjectProperty<>(dur);
         });
-
-        colRoomName.setCellValueFactory(new PropertyValueFactory<>("roomName"));
-        colCapacity.setCellValueFactory(new PropertyValueFactory<>("capacity"));
     }
-
-    private void setupTimeSpinners() {
-        configureTimeSpinner(spinDayStartTime, LocalTime.of(9, 0));
-        configureTimeSpinner(spinDayEndTime, LocalTime.of(17, 0));
-        spinMinGap.setValueFactory(new SpinnerValueFactory.IntegerSpinnerValueFactory(0, 120, 30, 5));
-    }
-
-    private void handleVisibility() {
-        String type = comboConstraintType.getValue();
-        if (type == null) return;
-
-        comboDay.setVisible(type.contains("Day"));
-        txtTimeStart.setVisible(type.contains("Time"));
-        txtTimeEnd.setVisible(type.contains("Time"));
-        txtRoomName.setVisible(type.contains("Room"));
-    }
-
-    @FXML
-    public void handleSaveConfig(ActionEvent event) {
-        Course selectedCourse = comboCourses.getValue();
-        if (selectedCourse == null) {
-            logStatus("Please select a course first!");
-            return;
-        }
-
-        int duration = spinExamDuration.getValue();
-        courseDurations.put(selectedCourse.getCourseCode(), duration);
-        
-        String type = comboConstraintType.getValue();
-        StringBuilder ruleInfo = new StringBuilder("[" + selectedCourse.getCourseCode() + "] ");
-        ruleInfo.append("Duration: ").append(duration).append(" min");
-
-        if (type != null) {
-            ruleInfo.append(" | Rule: ").append(type);
-        }
-
-        listConstraints.getItems().add(ruleInfo.toString());
-        logStatus("Configuration saved for " + selectedCourse.getCourseCode());
-    }
-
-    @FXML
-    public void handleRemoveConstraint(ActionEvent event) {
-        int selectedIdx = listConstraints.getSelectionModel().getSelectedIndex();
-        if (selectedIdx != -1) {
-            listConstraints.getItems().remove(selectedIdx);
-        }
-    }
-
-    @FXML
-    public void handleGenerate(ActionEvent event) {
-        if (masterRepository == null) return;
-
-        List<String> missingCourses = new ArrayList<>();
-        for (Course c : masterRepository.getAllCourses()) {
-            if (!courseDurations.containsKey(c.getCourseCode())) {
-                missingCourses.add(c.getCourseCode());
+    
+    private void setupExamDurationSpinner() {
+        spinExamDuration.setValueFactory(new SpinnerValueFactory.IntegerSpinnerValueFactory(15, 180, 60, 5));
+        spinExamDuration.valueProperty().addListener((obs, oldVal, newVal) -> {
+            Course selected = courseTable.getSelectionModel().getSelectedItem();
+            if (selected != null && newVal != null) {
+                courseDurationMap.put(selected.getCourseCode(), newVal);
+                courseTable.refresh();
+                logStatus("Duration updated for " + selected.getCourseCode());
             }
-        }
+        });
+    }
+    
+    private void handleCourseSelection(Course course) {
+        setRightPanelDisable(false);
+        
+        lblSelectedCourse.setText(course.getCourseCode());
+        int duration = courseDurationMap.getOrDefault(course.getCourseCode(), 60);
+        courseDurationMap.putIfAbsent(course.getCourseCode(), 60);
+        spinExamDuration.getValueFactory().setValue(duration);
+    
+        listConstraints.getItems().clear();
 
-        if (!missingCourses.isEmpty()) {
-            showWarningPopup(missingCourses);
-            return;
-        }
+        btnRemoveConstraint.setDisable(true);
 
-        if (mainController != null) {
-            mainController.showScheduleView(null);
+        if (courseConstraintsMap.containsKey(course.getCourseCode())) {
+            listConstraints.getItems().addAll(courseConstraintsMap.get(course.getCourseCode()));
         }
     }
+    
+    private void showDataPopup(String title, List<String> data) {
+        ListView<String> list = new ListView<>();
+        list.setItems(FXCollections.observableArrayList(data));
+        VBox layout = new VBox(10, list);
+        layout.setPadding(new javafx.geometry.Insets(10));
+        Stage stage = new Stage();
+        stage.setTitle(title);
+        stage.initModality(Modality.APPLICATION_MODAL);
+        stage.setScene(new Scene(layout, 600, 400));
+        stage.show();
+    }
 
-    private void showWarningPopup(List<String> missing) {
-        Alert alert = new Alert(Alert.AlertType.WARNING);
-        alert.setTitle("Missing Configuration");
-        alert.setHeaderText("Exam durations are required!");
-        alert.setContentText("The following courses have no duration set:\n" + String.join(", ", missing));
+    private void showError(String header, String content) {
+        Alert alert = new Alert(Alert.AlertType.ERROR);
+        alert.setTitle("Error");
+        alert.setHeaderText(header);
+        alert.setContentText(content);
         alert.showAndWait();
     }
 
@@ -179,30 +434,18 @@ public class ConfigController {
 
         if (this.masterRepository != null) {
             courseTable.setItems(FXCollections.observableArrayList(masterRepository.getAllCourses()));
-            studentTable.setItems(FXCollections.observableArrayList(masterRepository.getAllStudents()));
-            roomTable.setItems(FXCollections.observableArrayList(masterRepository.getAllClassRooms()));
-            comboCourses.setItems(FXCollections.observableArrayList(masterRepository.getAllCourses()));
+            for(Course c : masterRepository.getAllCourses()) {
+                courseDurationMap.putIfAbsent(c.getCourseCode(), 60);
+            }
         }
     }
 
-    private void configureTimeSpinner(Spinner<LocalTime> spinner, LocalTime initialTime) {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm");
-        
-        SpinnerValueFactory<LocalTime> factory = new SpinnerValueFactory<>() {
-            { setValue(initialTime); }
-            @Override public void decrement(int steps) { setValue(getValue().minusMinutes(5 * steps)); }
-            @Override public void increment(int steps) { setValue(getValue().plusMinutes(5 * steps)); }
-        };
-
-        factory.setConverter(new StringConverter<>() {
-            @Override public String toString(LocalTime time) { return time == null ? "" : formatter.format(time); }
-            @Override public LocalTime fromString(String s) { 
-                try { return LocalTime.parse(s, formatter); } catch (Exception e) { return spinner.getValue(); } 
-            }
-        });
-
-        spinner.setValueFactory(factory);
-        spinner.setEditable(true);
+    private void setRightPanelDisable(boolean disable) {
+        spinExamDuration.setDisable(disable);
+        btnAddConstraint.setDisable(disable);
+        btnRemoveConstraint.setDisable(true);
+        listConstraints.setDisable(disable);
+        if (disable) lblSelectedCourse.setText("No Selection");
     }
 
     private void logStatus(String msg) {
