@@ -1,6 +1,7 @@
 package com.app.controller;
 
 import com.app.repository.MasterDataRepository;
+import com.app.util.DataLoadingException;
 
 import javafx.animation.PauseTransition;
 import javafx.event.ActionEvent;
@@ -83,7 +84,7 @@ public class LoadDataController {
         }
     }
 
-    @FXML public void handleLoad(ActionEvent event) throws IOException {
+    @FXML public void handleLoad(ActionEvent event) {
         if (fileStudents == null || fileCourses == null || fileRooms == null || fileAttendance == null) {
             log("ERROR: Missing files! Please select all 4 CSV files.");
             return;
@@ -95,7 +96,7 @@ public class LoadDataController {
 
         try {
             log("--------------------------------");
-            log("Starting Data Import...");
+            log("Starting Data Import and Integrity Check...");
 
             masterRepository.loadAllDataFromCSV();
             
@@ -103,7 +104,7 @@ public class LoadDataController {
             lblCourseCount.setText(String.valueOf(masterRepository.getAllCourses().size()));
             lblRoomCount.setText(String.valueOf(masterRepository.getAllClassRooms().size()));
 
-            log("SUCCESS: All data imported successfully.");
+            log("SUCCESS: Integrity checks passed. All data imported.");
             log("Initializing Configuration Module...");
 
             PauseTransition pause = new PauseTransition(Duration.seconds(1));
@@ -114,8 +115,15 @@ public class LoadDataController {
             });
             pause.play();
 
+        } catch (DataLoadingException e) {
+            log("DATA INTEGRITY ERROR: " + e.getMessage());
+            log("Action aborted. Please fix the CSV file and try again.");
+            
+        } catch (IOException e) {
+            log("FILE ACCESS ERROR: " + e.getMessage());
+            
         } catch (Exception e) {
-            log("CRITICAL ERROR: " + e.getMessage());
+            log("CRITICAL SYSTEM ERROR: " + e.getMessage());
             e.printStackTrace();
         }
     }
@@ -156,7 +164,6 @@ public class LoadDataController {
         this.masterRepository = repository;
         this.mainController = mainController;
 
-        // DEBUG: Debug modunda otomatik dosya yükleme
         preloadDebugData();
     }
 

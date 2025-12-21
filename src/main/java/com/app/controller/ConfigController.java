@@ -1,9 +1,11 @@
 package com.app.controller;
 
 import com.app.model.Course;
+import com.app.model.ExamSession;
 import com.app.model.Student;
 import com.app.model.TimeBlock;
 import com.app.repository.MasterDataRepository;
+import com.app.service.ConstraintFactory;
 import com.app.service.SchedulerService;
 import com.app.service.SchedulerService.SchedulerConfig;
 
@@ -41,6 +43,7 @@ public class ConfigController {
     @FXML private TableView<Course> courseTable;
     @FXML private TableColumn<Course, String> colCourseCode;
     @FXML private TableColumn<Course, Integer> colDuration;
+    @FXML private TableColumn<Course, Integer> colStudentCount; 
     @FXML private TableColumn<Course, String> colEnrolledStudents;
 
     @FXML private DatePicker dateStartDate;
@@ -73,10 +76,12 @@ public class ConfigController {
     private List<String> globalConstraintsList = new ArrayList<>();
 
     private static final int DEFAULT_MAX_EXAMS = 50;
-    
     private static final LocalTime HARD_LIMIT_START = LocalTime.of(8, 0);
     private static final LocalTime HARD_LIMIT_END = LocalTime.of(21, 0);
     private static final int MIN_GLOBAL_DURATION_HOURS = 5;
+    private static final int SLOT_DURATION_MINUTES = 5;
+    
+    private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm");
 
     @FXML public void handleAddConstraint(ActionEvent event) {
         Course selected = courseTable.getSelectionModel().getSelectedItem();
@@ -144,6 +149,8 @@ public class ConfigController {
             return;
         }
 
+        updateSessionDurationsInRepository();
+
         Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
         confirm.setTitle("Confirm Schedule Generation");
         confirm.setHeaderText("Ready to Generate?");
@@ -177,6 +184,10 @@ public class ConfigController {
                     );
 
                     schedulerService.updateConfiguration(config);
+                    schedulerService.resetConstraints();
+                    
+                    applyConstraintsFromUI();
+                    
                     schedulerService.generateSchedule();
                     
                     Thread.sleep(1000);
@@ -206,6 +217,105 @@ public class ConfigController {
         }
     }
 
+    private void applyConstraintsFromUI() {
+        for (Map.Entry<String, List<String>> entry : courseConstraintsMap.entrySet()) {
+            String courseCode = entry.getKey();
+            for (String constraintStr : entry.getValue()) {
+                parseAndAddConstraint(courseCode, constraintStr);
+            }
+        }
+
+        if (!globalConstraintsList.isEmpty()) {
+            List<String> allCourses = masterRepository.getAllCourses().stream()
+                                        .map(Course::getCourseCode)
+                                        .collect(Collectors.toList());
+            
+            for (String globalStr : globalConstraintsList) {
+                for (String courseCode : allCourses) {
+                    parseAndAddConstraint(courseCode, globalStr);
+                }
+            }
+        }
+    }
+
+    private void parseAndAddConstraint(String courseCode, String constraintStr) {
+        try {
+            if (constraintStr == null || !constraintStr.contains(":")) return;
+
+            String[] parts = constraintStr.split(":", 2);
+            String typeStr = parts[0].trim();
+            String dataStr = parts[1].trim();
+            
+            LocalTime dayStart = spinDayStartTime.getValue();
+            if (dayStart == null) dayStart = LocalTime.of(9, 0); 
+            
+            if (typeStr.equals("Forbidden Room")) {
+                String[] rooms = dataStr.split(",");
+                for (String r : rooms) {
+                    if (!r.trim().isEmpty()) {
+                        schedulerService.addConstraint(
+                            ConstraintFactory.create(ConstraintFactory.ConstraintType.AVOID_ROOM, courseCode, r.trim())
+                        );
+                    }
+                }
+            } 
+            else if (typeStr.equals("Avoid Time Period")) {
+                String[] timeParts = dataStr.split(";");
+
+                String daysPart = timeParts[0];
+                String timesPart = timeParts[1].trim(); 
+
+                String[] range = timesPart.split("[^0-9:]+"); 
+                List<String> validTimes = new ArrayList<>();
+                for(String s : range) if(!s.trim().isEmpty()) validTimes.add(s.trim());
+
+                if (validTimes.size() < 2) return;
+
+                String startStr = validTimes.get(0);
+                String endStr = validTimes.get(1);
+
+                if (startStr.indexOf(':') == 1) startStr = "0" + startStr;
+                if (endStr.indexOf(':') == 1) endStr = "0" + endStr;
+
+                LocalTime tStart = LocalTime.parse(startStr, TIME_FORMATTER);
+                LocalTime tEnd = LocalTime.parse(endStr, TIME_FORMATTER);
+
+                long startMinutes = java.time.temporal.ChronoUnit.MINUTES.between(dayStart, tStart);
+                long endMinutes = java.time.temporal.ChronoUnit.MINUTES.between(dayStart, tEnd);
+                
+                if (startMinutes < 0) startMinutes = 0;
+                if (endMinutes < 0) endMinutes = 0;
+
+                int startSlot = (int) (startMinutes / SLOT_DURATION_MINUTES);
+                int endSlot = (int) (endMinutes / SLOT_DURATION_MINUTES);
+
+                String[] days = daysPart.split(",");
+                LocalDate startParam = dateStartDate.getValue();
+                LocalDate endParam = dateEndDate.getValue();
+                
+                if (startParam != null && endParam != null) {
+                    for (LocalDate date = startParam; !date.isAfter(endParam); date = date.plusDays(1)) {
+                        for (String d : days) {
+                            if (date.getDayOfWeek().name().equalsIgnoreCase(d.trim())) {
+                                int currentDayIndex = (int) java.time.temporal.ChronoUnit.DAYS.between(startParam, date);
+                                
+                                schedulerService.addConstraint(
+                                    ConstraintFactory.create(
+                                        ConstraintFactory.ConstraintType.AVOID_TIME_RANGE, 
+                                        courseCode, 
+                                        currentDayIndex, 
+                                        startSlot, 
+                                        endSlot
+                                    )
+                                );
+                            }
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) {}
+    }
+
     @FXML public void initialize() {
         setupTableFactories();
         setupGlobalSpinners();
@@ -230,38 +340,35 @@ public class ConfigController {
         });
     }
 
+    private void updateSessionDurationsInRepository() {
+        for (Map.Entry<String, Integer> entry : courseDurationMap.entrySet()) {
+            String courseCode = entry.getKey();
+            int durationMinutes = entry.getValue();
+            
+            ExamSession session = masterRepository.findSessionByCourse(courseCode);
+            if (session != null) {
+                int slots = (int) Math.ceil((double) durationMinutes / SLOT_DURATION_MINUTES);
+                session.setDurationSlots(slots);
+            }
+        }
+    }
+
     private void setupGlobalSpinners() {
         setupTimeSpinnerFactory(spinDayStartTime, LocalTime.of(9, 0));
         setupTimeSpinnerFactory(spinDayEndTime, LocalTime.of(17, 0));
         
         spinDayStartTime.valueProperty().addListener((obs, oldVal, newVal) -> {
             if (newVal == null) return;
-
-            if (newVal.isBefore(HARD_LIMIT_START)) {
-                spinDayStartTime.getValueFactory().setValue(HARD_LIMIT_START);
-                return;
-            }
-
-            LocalTime currentEnd = spinDayEndTime.getValue();
-            LocalTime limit = currentEnd.minusHours(MIN_GLOBAL_DURATION_HOURS);
-            if (newVal.isAfter(limit)) {
-                spinDayStartTime.getValueFactory().setValue(limit);
-            }
+            if (newVal.isBefore(HARD_LIMIT_START)) { spinDayStartTime.getValueFactory().setValue(HARD_LIMIT_START); return; }
+            LocalTime limit = spinDayEndTime.getValue().minusHours(MIN_GLOBAL_DURATION_HOURS);
+            if (newVal.isAfter(limit)) spinDayStartTime.getValueFactory().setValue(limit);
         });
 
         spinDayEndTime.valueProperty().addListener((obs, oldVal, newVal) -> {
             if (newVal == null) return;
-
-            if (newVal.isAfter(HARD_LIMIT_END)) {
-                spinDayEndTime.getValueFactory().setValue(HARD_LIMIT_END);
-                return;
-            }
-
-            LocalTime currentStart = spinDayStartTime.getValue();
-            LocalTime limit = currentStart.plusHours(MIN_GLOBAL_DURATION_HOURS);
-            if (newVal.isBefore(limit)) {
-                spinDayEndTime.getValueFactory().setValue(limit);
-            }
+            if (newVal.isAfter(HARD_LIMIT_END)) { spinDayEndTime.getValueFactory().setValue(HARD_LIMIT_END); return; }
+            LocalTime limit = spinDayStartTime.getValue().plusHours(MIN_GLOBAL_DURATION_HOURS);
+            if (newVal.isBefore(limit)) spinDayEndTime.getValueFactory().setValue(limit);
         });
 
         spinMinGap.setValueFactory(new SpinnerValueFactory.IntegerSpinnerValueFactory(0, 120, 30, 5));
@@ -271,20 +378,15 @@ public class ConfigController {
     private void setupTimeSpinnerFactory(Spinner<LocalTime> spinner, LocalTime initial) {
         SpinnerValueFactory<LocalTime> factory = new SpinnerValueFactory<>() {
             { setValue(initial); }
-            @Override public void decrement(int steps) { 
-                if(getValue()!=null) setValue(getValue().minusMinutes(15 * steps)); 
-            }
-            @Override public void increment(int steps) { 
-                if(getValue()!=null) setValue(getValue().plusMinutes(15 * steps)); 
-            }
+            @Override public void decrement(int steps) { if(getValue()!=null) setValue(getValue().minusMinutes(15 * steps)); }
+            @Override public void increment(int steps) { if(getValue()!=null) setValue(getValue().plusMinutes(15 * steps)); }
         };
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm");
         factory.setConverter(new StringConverter<>() {
             @Override public String toString(LocalTime time) { return time == null ? "" : formatter.format(time); }
             @Override public LocalTime fromString(String s) { return LocalTime.parse(s, formatter); }
         });
-        spinner.setValueFactory(factory);
-        spinner.setEditable(true);
+        spinner.setValueFactory(factory); spinner.setEditable(true);
     }
 
     private void openConstraintModal(String courseCode, boolean isGlobal) {
@@ -300,17 +402,11 @@ public class ConfigController {
 
             LocalTime currentStart = spinDayStartTime.getValue();
             LocalTime currentEnd = spinDayEndTime.getValue();
-            
             if (currentStart == null) currentStart = LocalTime.of(9, 0);
             if (currentEnd == null) currentEnd = LocalTime.of(17, 0);
 
             modalCtrl.setupTimeSpinners(currentStart, currentEnd);
-
-            if (isGlobal) {
-                modalCtrl.setGlobalMode();
-            } else {
-                modalCtrl.setCourseCode(courseCode);
-            }
+            if (isGlobal) modalCtrl.setGlobalMode(); else modalCtrl.setCourseCode(courseCode);
 
             Stage stage = new Stage();
             stage.setTitle(isGlobal ? "Add Global Constraint" : "Add Course Constraint");
@@ -320,15 +416,8 @@ public class ConfigController {
             
             String result = modalCtrl.getResult();
             if (result != null) {
-                if (isGlobal) {
-                    listGlobalConstraints.getItems().add(result);
-                    globalConstraintsList.add(result);
-                    logStatus("Global Constraint added.");
-                } else {
-                    listConstraints.getItems().add(result);
-                    courseConstraintsMap.computeIfAbsent(courseCode, k -> new ArrayList<>()).add(result);
-                    logStatus("Course Constraint added.");
-                }
+                if (isGlobal) { listGlobalConstraints.getItems().add(result); globalConstraintsList.add(result); logStatus("Global Constraint added."); } 
+                else { listConstraints.getItems().add(result); courseConstraintsMap.computeIfAbsent(courseCode, k -> new ArrayList<>()).add(result); logStatus("Course Constraint added."); }
             }
         } catch (IOException e) { e.printStackTrace(); logStatus("Error opening constraint window."); }
     }
@@ -339,43 +428,33 @@ public class ConfigController {
         StringConverter<LocalDate> converter = new StringConverter<>() {
             @Override public String toString(LocalDate date) { return (date != null) ? formatter.format(date) : ""; }
             @Override public LocalDate fromString(String string) {
-                if (string != null && !string.trim().isEmpty()) {
-                    try { return LocalDate.parse(string.replace('.', '/'), formatter); } catch (Exception e) { return null; }
-                } return null;
+                if (string != null && !string.trim().isEmpty()) { try { return LocalDate.parse(string.replace('.', '/'), formatter); } catch (Exception e) { return null; } } return null;
             }
         };
         dateStartDate.setConverter(converter); dateEndDate.setConverter(converter);
         dateStartDate.setPromptText("dd/MM/yyyy"); dateEndDate.setPromptText("dd/MM/yyyy");
-        dateStartDate.setDayCellFactory(picker -> new DateCell() {
-            @Override public void updateItem(LocalDate date, boolean empty) {
-                super.updateItem(date, empty);
-                setDisable(empty || date.compareTo(LocalDate.now().plusDays(1)) < 0);
-            }
-        });
-        dateEndDate.setDayCellFactory(picker -> new DateCell() {
-            @Override public void updateItem(LocalDate date, boolean empty) {
-                super.updateItem(date, empty);
-                LocalDate start = dateStartDate.getValue();
-                setDisable(empty || date.compareTo(start != null ? start : LocalDate.now().plusDays(1)) < 0);
-            }
-        });
-        dateStartDate.valueProperty().addListener((obs, oldVal, newVal) -> {
-            if (newVal != null && dateEndDate.getValue() != null && dateEndDate.getValue().isBefore(newVal)) dateEndDate.setValue(null);
-        });
+        dateStartDate.setDayCellFactory(picker -> new DateCell() { @Override public void updateItem(LocalDate date, boolean empty) { super.updateItem(date, empty); setDisable(empty || date.compareTo(LocalDate.now().plusDays(1)) < 0); }});
+        dateEndDate.setDayCellFactory(picker -> new DateCell() { @Override public void updateItem(LocalDate date, boolean empty) { super.updateItem(date, empty); LocalDate start = dateStartDate.getValue(); setDisable(empty || date.compareTo(start != null ? start : LocalDate.now().plusDays(1)) < 0); }});
+        dateStartDate.valueProperty().addListener((obs, oldVal, newVal) -> { if (newVal != null && dateEndDate.getValue() != null && dateEndDate.getValue().isBefore(newVal)) dateEndDate.setValue(null); });
     }
     
     private void setupTableFactories() {
         colCourseCode.setCellValueFactory(new PropertyValueFactory<>("courseCode"));
+        
         colEnrolledStudents.setCellValueFactory(cellData -> {
             List<Student> students = cellData.getValue().getEnrolledStudents();
             String ids = students.stream().map(Student::getStudentID).limit(5).collect(Collectors.joining(", ")) + (students.size() > 5 ? "..." : "");
             return new SimpleStringProperty(ids);
         });
+        
         colDuration.setCellValueFactory(cellData -> {
             String code = cellData.getValue().getCourseCode();
             Integer dur = courseDurationMap.getOrDefault(code, 60);
             return new SimpleObjectProperty<>(dur);
         });
+
+        colStudentCount.setCellValueFactory(cellData -> 
+            new SimpleObjectProperty<>(cellData.getValue().getEnrolledStudents().size()));
     }
     
     private void setupExamDurationSpinner() {
@@ -392,19 +471,13 @@ public class ConfigController {
     
     private void handleCourseSelection(Course course) {
         setRightPanelDisable(false);
-        
         lblSelectedCourse.setText(course.getCourseCode());
         int duration = courseDurationMap.getOrDefault(course.getCourseCode(), 60);
         courseDurationMap.putIfAbsent(course.getCourseCode(), 60);
         spinExamDuration.getValueFactory().setValue(duration);
-    
         listConstraints.getItems().clear();
-
         btnRemoveConstraint.setDisable(true);
-
-        if (courseConstraintsMap.containsKey(course.getCourseCode())) {
-            listConstraints.getItems().addAll(courseConstraintsMap.get(course.getCourseCode()));
-        }
+        if (courseConstraintsMap.containsKey(course.getCourseCode())) { listConstraints.getItems().addAll(courseConstraintsMap.get(course.getCourseCode())); }
     }
     
     private void showDataPopup(String title, List<String> data) {

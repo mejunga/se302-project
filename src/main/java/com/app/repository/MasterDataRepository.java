@@ -1,5 +1,6 @@
 package com.app.repository;
 
+import com.app.util.DataLoadingException;
 import com.app.model.ClassRoom;
 import com.app.model.Course;
 import com.app.model.ExamSession;
@@ -48,55 +49,77 @@ public class MasterDataRepository {
     public List<ClassRoom> getAllClassRooms() { return allClassRooms; }
     public List<ExamSession> getPendingSessions() { return pendingSessions; }
 
-    public void loadAllDataFromCSV() throws IOException {
-        allClassRooms.clear();
-        allStudents.clear();
-        allCourses.clear();
+    public void loadAllDataFromCSV() throws IOException, DataLoadingException {
+        List<ClassRoom> tempRooms = new ArrayList<>();
+        List<Student> tempStudents = new ArrayList<>();
+        List<Course> tempCourses = new ArrayList<>();
+        List<ExamSession> tempSessions = new ArrayList<>();
 
         if (roomsCSVPath != null) {
             try (BufferedReader br = new BufferedReader(new FileReader(roomsCSVPath))) {
                 String line;
-                boolean firstLine = true;
+                int lineNum = 0;
                 while ((line = br.readLine()) != null) {
-                    if (firstLine) { firstLine = false; continue; }
+                    lineNum++;
+                    if (lineNum == 1) continue; 
+                    
                     String[] parts = line.split(";");
-                    if (parts.length >= 2) {
-                        allClassRooms.add(new ClassRoom(parts[0].trim(), Integer.parseInt(parts[1].trim())));
+                    if (parts.length < 2) {
+                        throw new DataLoadingException("Rooms File Error (Line " + lineNum + "): Missing columns. Expected 'Name;Capacity'.");
+                    }
+                    
+                    try {
+                        int cap = Integer.parseInt(parts[1].trim());
+                        tempRooms.add(new ClassRoom(parts[0].trim(), cap));
+                    } catch (NumberFormatException e) {
+                        throw new DataLoadingException("Rooms File Error (Line " + lineNum + "): Capacity '" + parts[1] + "' is not a valid number.");
                     }
                 }
             }
+        } else {
+             throw new DataLoadingException("Rooms CSV path is missing!");
         }
 
         if (studentsCSVPath != null) {
             try (BufferedReader br = new BufferedReader(new FileReader(studentsCSVPath))) {
                 String line;
-                boolean firstLine = true;
+                int lineNum = 0;
                 while ((line = br.readLine()) != null) {
-                    if (firstLine) { firstLine = false; continue; }
-                    allStudents.add(new Student(line.trim()));
+                    lineNum++;
+                    if (lineNum == 1) continue;
+                    if (line.trim().isEmpty()) continue; 
+                    
+                    tempStudents.add(new Student(line.trim()));
                 }
             }
+        } else {
+             throw new DataLoadingException("Students CSV path is missing!");
         }
 
         if (coursesCSVPath != null) {
             try (BufferedReader br = new BufferedReader(new FileReader(coursesCSVPath))) {
                 String line;
-                boolean firstLine = true;
+                int lineNum = 0;
                 while ((line = br.readLine()) != null) {
-                    if (firstLine) { firstLine = false; continue; }
+                    lineNum++;
+                    if (lineNum == 1) continue;
+                    if (line.trim().isEmpty()) continue;
+
                     Course c = new Course(line.trim());
-                    allCourses.add(c);
-                    pendingSessions.add(new ExamSession().setCourseWithReturn(c));
+                    tempCourses.add(c);
+                    tempSessions.add(new ExamSession().setCourseWithReturn(c));
                 }
             }
+        } else {
+             throw new DataLoadingException("Courses CSV path is missing!");
         }
 
         if (attendanceCSVPath != null) {
             HashMap<String, Student> studentMap = new HashMap<>();
-            for (Student s : allStudents) studentMap.put(s.getStudentID(), s);
+            for (Student s : tempStudents) studentMap.put(s.getStudentID(), s);
 
             HashMap<String, Course> courseMap = new HashMap<>();
-            for (Course c : allCourses) courseMap.put(c.getCourseCode(), c);
+            for (Course c : tempCourses) courseMap.put(c.getCourseCode(), c);
 
             try (BufferedReader br = new BufferedReader(new FileReader(attendanceCSVPath))) {
                 String line;
@@ -106,12 +129,18 @@ public class MasterDataRepository {
                 while ((line = br.readLine()) != null) {
                     lineNumber++;
                     if (lineNumber % 3 == 1) {
-                        currentCourse = courseMap.get(line.trim());
+                        String code = line.trim();
+                        currentCourse = courseMap.get(code);
+                        if (currentCourse == null) {
+                            throw new DataLoadingException("Attendance Error (Line " + lineNumber + "): Course '" + code + "' not found in Courses list.");
+                        }
                     }
                     else if (lineNumber % 3 == 2 && currentCourse != null) {
                         String[] ids = line.split(",");
                         for (String id : ids) {
                             id = id.trim().replace("'","").replace("[","").replace("]","");
+                            if(id.isEmpty()) continue;
+
                             Student student = studentMap.get(id.trim());
                             if (student != null) {
                                 currentCourse.getEnrolledStudents().add(student);
@@ -121,7 +150,14 @@ public class MasterDataRepository {
                     }
                 }
             }
+        } else {
+             throw new DataLoadingException("Attendance CSV path is missing!");
         }
+
+        this.allClassRooms = tempRooms;
+        this.allStudents = tempStudents;
+        this.allCourses = tempCourses;
+        this.pendingSessions = tempSessions;
     }
 
     public ClassRoom findRoomByName(String name) {

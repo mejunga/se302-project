@@ -20,4 +20,8 @@ public class ExamSession {
     public int getDurationSlots() {
         return durationSlots;
     }
+
+    public void setDurationSlots(int slots) {
+        this.durationSlots = slots;
+    }
 }

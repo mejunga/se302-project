@@ -73,7 +73,6 @@ public class Schedule {
 
         for (ClassRoom room : rooms){
             if (!isRoomAvailable(room, day, startSlot, duration)){
-                System.err.println("Error: Room " + room.getRoomName() + " is not available during assignment.");
                 return;
             }
         }

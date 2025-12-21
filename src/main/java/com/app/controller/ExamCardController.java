@@ -5,7 +5,10 @@ import com.app.model.ExamSession;
 
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
+import javafx.scene.control.Tooltip;
 import javafx.scene.layout.VBox;
+import javafx.util.Duration;
+
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
@@ -26,7 +29,7 @@ public class ExamCardController {
         if (session.getCourse() != null) {
             lblCourseCode.setText(session.getCourse().getCourseCode());
         } else {
-            lblCourseCode.setText("Unknown Course");
+            lblCourseCode.setText("Unknown");
         }
         
         if (rooms != null && !rooms.isEmpty()) {
@@ -35,7 +38,7 @@ public class ExamCardController {
                     .collect(Collectors.joining(", "));
             lblRoomInfo.setText(roomNames);
         } else {
-            lblRoomInfo.setText("No Room Assigned");
+            lblRoomInfo.setText("No Room");
         }
 
         DateTimeFormatter fmt = DateTimeFormatter.ofPattern("HH:mm");
@@ -43,14 +46,18 @@ public class ExamCardController {
         String timeStr = startTime.format(fmt) + " - " + endTime.format(fmt);
         lblTimeInfo.setText(timeStr);
 
-        DateTimeFormatter dateFmt = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-        String tooltipText = String.format("%s\nDate: %s\nTime: %s", 
-            session.getCourse().getCourseCode(),
+        DateTimeFormatter dateFmt = DateTimeFormatter.ofPattern("dd MMMM yyyy");
+        String tooltipText = String.format("Course: %s\nDate: %s\nTime: %s\nRooms: %s", 
+            session.getCourse().getCourseCode(), 
             date.format(dateFmt),
-            timeStr
+            timeStr,
+            lblRoomInfo.getText()
         );
-        javafx.scene.control.Tooltip tooltip = new javafx.scene.control.Tooltip(tooltipText);
-        javafx.scene.control.Tooltip.install(cardRoot, tooltip);
+        
+        Tooltip tooltip = new Tooltip(tooltipText);
+        tooltip.setShowDelay(Duration.millis(300)); 
+        tooltip.setStyle("-fx-font-size: 12px;");
+        Tooltip.install(cardRoot, tooltip);
     }
 
     public ExamSession getSession() {

@@ -103,7 +103,6 @@ public class MainController {
             URL resource = getClass().getResource("/fxml/" + fxmlFileName + ".fxml");
             
             if (resource == null) {
-                System.err.println("View not found: " + fxmlFileName);
                 statusLabel.setText("Error: " + fxmlFileName + " not found.");
                 return;
             }
@@ -125,8 +124,9 @@ public class MainController {
             }
             else if (controller instanceof ScheduleController) {
                 ((ScheduleController) controller).setDependencies(
+                    this.scheduleRepository,
                     this.schedulerService, 
-                    this.scheduleRepository
+                    this.masterRepository
                 );
             }
             else if (controller instanceof HomeController) {

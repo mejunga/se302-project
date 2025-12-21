@@ -20,6 +20,7 @@
                 <columns>
                     <TableColumn fx:id="colCourseCode" text="Course Code" prefWidth="120" resizable="false"/>
                     <TableColumn fx:id="colDuration" text="Duration (min)" prefWidth="120" resizable="false" style="-fx-alignment: CENTER;"/>
+                    <TableColumn fx:id="colStudentCount" text="Student Count" prefWidth="110" resizable="false" style="-fx-alignment: CENTER;"/>
                     <TableColumn fx:id="colEnrolledStudents" text="Enrolled Students (IDs)" prefWidth="300"/>
                 </columns>
                 <columnResizePolicy>

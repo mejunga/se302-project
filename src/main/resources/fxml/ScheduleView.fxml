@@ -10,52 +10,49 @@
             prefHeight="700.0" prefWidth="1200.0">
 
     <left>
-        <VBox spacing="10" prefWidth="220" 
-              style="-fx-background-color: #f8f9fa; -fx-border-color: #dee2e6; -fx-border-width: 0 1 0 0;">
+        <VBox spacing="10" prefWidth="250" style="-fx-background-color: #f8f9fa; -fx-border-color: #dee2e6; -fx-border-width: 0 1 0 0;">
             <padding><Insets top="20" right="15" bottom="20" left="15"/></padding>
-            <Label text="Generated Schedules" textFill="#2c3e50">
-                <font><Font name="System Bold" size="16.0"/></font>
-            </Label>
-            <Label text="Select a schedule to edit." textFill="#7f8c8d" wrapText="true" style="-fx-font-size: 11px;"/>
             <ListView fx:id="scheduleListView" VBox.vgrow="ALWAYS"/>
         </VBox>
     </left>
 
     <center>
         <VBox>
-            <HBox alignment="CENTER_LEFT" spacing="15" style="-fx-padding: 10; -fx-background-color: white; -fx-border-color: #e0e0e0; -fx-border-width: 0 0 1 0;">
-                <Label fx:id="lblSelectedSchedule" text="No Schedule Selected" textFill="#2c3e50">
-                    <font><Font name="System Bold" size="18.0"/></font>
-                </Label>
-                <Region HBox.hgrow="ALWAYS"/>
-                <Label text="Drag &amp; Drop to reschedule. Updates are saved automatically." textFill="#e67e22" style="-fx-font-style: italic; -fx-font-size: 12px;"/>
+            <HBox alignment="CENTER_LEFT" spacing="15" style="-fx-padding: 10;">
+                <Label fx:id="lblSelectedSchedule" text="No Schedule Selected"/>
             </HBox>
 
-            <ScrollPane fx:id="scrollPane" fitToWidth="true" fitToHeight="true" VBox.vgrow="ALWAYS" style="-fx-background: #fdfdfd;">
+            <TabPane fx:id="roomTabPane" tabClosingPolicy="UNAVAILABLE"/>
+
+            <ScrollPane fx:id="scrollPane" fitToWidth="false" fitToHeight="false" VBox.vgrow="ALWAYS">
                 <content>
-                    <HBox>
-                        <Pane fx:id="timeRulerPane" minWidth="60" prefWidth="60" style="-fx-background-color: #f8f9fa; -fx-border-color: #ddd; -fx-border-width: 0 1 0 0;"/>
-                        
-                        <VBox HBox.hgrow="ALWAYS">
-                            <HBox fx:id="dayHeaderBox" minHeight="40" prefHeight="40" style="-fx-background-color: white; -fx-border-color: #ddd; -fx-border-width: 0 0 1 0;"/>
-                            
+                    <VBox fx:id="mainContainer" spacing="0">
+                        <HBox alignment="TOP_LEFT">
+                             <Pane fx:id="spacerPane" /> 
+                             <HBox fx:id="dayHeaderBox" style="-fx-background-color: white;"/>
+                        </HBox>
+                        <HBox alignment="TOP_LEFT">
+                            <Pane fx:id="timeRulerPane" style="-fx-background-color: #f8f9fa;"/>
                             <StackPane alignment="TOP_LEFT">
                                 <Pane fx:id="gridLinesPane" />
                                 <Pane fx:id="eventsPane" />
                             </StackPane>
-                        </VBox>
-                    </HBox>
+                        </HBox>
+                    </VBox>
                 </content>
             </ScrollPane>
         </VBox>
     </center>
 
     <bottom>
-        <HBox spacing="15" style="-fx-padding: 10; -fx-background-color: #34495e; -fx-alignment: CENTER_LEFT;">
-            <Button fx:id="btnPrint" text="Export Current State to PDF" onAction="#handlePrint"
-                    style="-fx-background-color: #e67e22; -fx-text-fill: white; -fx-font-weight: bold; -fx-cursor: hand;"/>
-            <Region HBox.hgrow="ALWAYS"/>
-            <Label fx:id="lblStatus" text="Ready" textFill="white"/>
+        <HBox spacing="15" alignment="CENTER_LEFT" style="-fx-padding: 10; -fx-background-color: #34495e;">
+            
+            <Label fx:id="lblStatus" text="Ready" style="-fx-font-weight: bold; -fx-text-fill: white;"/>
+            
+            <Region HBox.hgrow="ALWAYS" />
+            
+            <Button fx:id="btnPrintSelected" text="Print Selected Schedule" onAction="#handlePrintSelected"
+                    style="-fx-background-color: #e67e22; -fx-text-fill: white; -fx-font-weight: bold; -fx-cursor: hand; -fx-padding: 5 15 5 15; -fx-background-radius: 4;"/>
         </HBox>
     </bottom>
 

@@ -93,7 +93,6 @@ public class ConstraintModalController {
         } else {
             comboType.setItems(FXCollections.observableArrayList(
                 "Avoid Time Period", 
-                "Mandate Specific Room", 
                 "Forbidden Room"
             ));
         }

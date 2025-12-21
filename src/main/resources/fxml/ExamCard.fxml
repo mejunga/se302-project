@@ -8,23 +8,25 @@
 <VBox xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
       fx:controller="com.app.controller.ExamCardController"
       fx:id="cardRoot"
-      spacing="2" alignment="CENTER_LEFT"
-      style="-fx-background-color: #3498db; -fx-background-radius: 5; -fx-border-color: #2980b9; -fx-border-radius: 5; -fx-border-width: 1; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.3), 3, 0, 0, 1); -fx-cursor: hand;">
+      spacing="4" 
+      alignment="CENTER_LEFT"
+      maxWidth="Infinity" maxHeight="Infinity"
+      style="-fx-background-color: #3498db; -fx-background-radius: 6; -fx-border-color: #2980b9; -fx-border-radius: 6; -fx-border-width: 1; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.2), 4, 0, 0, 1); -fx-cursor: hand;">
 
     <padding>
-        <Insets top="2" right="5" bottom="2" left="5"/>
+        <Insets top="8" right="10" bottom="8" left="10"/>
     </padding>
 
     <Label fx:id="lblCourseCode" text="SE 302" textFill="white">
+        <font><Font name="System Bold" size="14.0"/></font>
+    </Label>
+    
+    <Label fx:id="lblRoomInfo" text="A101, B202" textFill="#ecf0f1" wrapText="true" VBox.vgrow="ALWAYS" maxHeight="Infinity" alignment="TOP_LEFT">
+        <font><Font size="11.0"/></font>
+    </Label>
+    
+    <Label fx:id="lblTimeInfo" text="09:00 - 10:30" textFill="#dff9fb">
         <font><Font name="System Bold" size="11.0"/></font>
-    </Label>
-    
-    <Label fx:id="lblRoomInfo" text="A101, B202" textFill="#ecf0f1" wrapText="true">
-        <font><Font size="9.0"/></font>
-    </Label>
-    
-    <Label fx:id="lblTimeInfo" text="09:00 - 10:30" textFill="#bdc3c7">
-        <font><Font size="9.0"/></font>
     </Label>
 
 </VBox>
