@@ -1,8 +1,7 @@
 plugins {
     id 'java'
     id 'application'
-    id 'org.openjfx.javafxplugin' version '0.1.0' 
-    id 'org.beryx.jlink' version '2.26.0'
+    id 'org.openjfx.javafxplugin' version '0.1.0'
 }
 
 repositories {
@@ -11,7 +10,6 @@ repositories {
 
 dependencies {
     implementation 'com.google.code.gson:gson:2.10.1'
-    testImplementation 'junit:junit:4.13.2'
 }
 
 java {
@@ -21,19 +19,8 @@ java {
 }
 
 application {
-    mainClass = 'com.app.SchedulerApp'
+    mainClass = 'com.app.Launcher'
     mainModule = 'com.app'
-}
-
-sourceSets {
-    main {
-        java {
-            srcDirs = ['src/main/java']
-        }
-        resources {
-            srcDirs = ['src/main/resources']
-        }
-    }
 }
 
 javafx {
@@ -41,26 +28,45 @@ javafx {
     modules = ['javafx.controls', 'javafx.fxml', 'javafx.graphics', 'javafx.web']
 }
 
-jlink {
-    imageName = 'SE320App'
-
-    launcher {
-        name = 'SE320App'
-        jvmArgs = ['--add-modules', 'javafx.controls,javafx.fxml,javafx.graphics,javafx.web']
+task prepareJPackageInput(type: Copy) {
+    dependsOn build
+    
+    from configurations.runtimeClasspath 
+    from jar 
+    from("dist") {
+        include "PdfPrinter.exe"
     }
 
-    options = ['--strip-debug', '--compress', '2', '--no-header-files', '--no-man-pages']
+    into "$buildDir/jpackage-input"
+}
 
-    jpackage {
-        installerType = 'msi'
-        installerName = 'SE320AppInstaller'
-        appVersion = project.version
-        vendor = 'mejunga'
-        installerOptions = [
-            '--win-per-user-install',
-            '--win-menu',
-            '--win-shortcut',
-            '--win-dir-chooser'
-        ]
+task createInstaller(type: Exec) {
+    dependsOn prepareJPackageInput
+
+    def outputDir = "$buildDir/jpackage-output"
+    def inputDir = "$buildDir/jpackage-input"
+    def mainJarName = jar.archiveFileName.get()
+
+    commandLine 'jpackage',
+            '--type', 'msi',                       
+            '--dest', outputDir,                  
+            '--input', inputDir,                   
+            '--name', 'SE320App',                  
+            '--main-class', application.mainClass.get(), 
+            '--main-jar', mainJarName,             
+            '--app-version', '1.0.0',              
+            '--vendor', 'mejunga',                 
+            '--win-dir-chooser',                   
+            '--win-menu',                          
+            '--win-shortcut',                     
+            '--java-options', '--enable-preview'
+            
+    doFirst {
+        delete outputDir
+        mkdir outputDir
+    }
+    
+    doLast {
+        println "Installer succesfully created at ${outputDir}"
     }
 }

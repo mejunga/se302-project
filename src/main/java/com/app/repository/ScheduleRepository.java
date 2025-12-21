@@ -131,23 +131,39 @@ public class ScheduleRepository {
         String pdfFileName = "Schedule_" + safeId + ".pdf";
         Path outPdfPath = outputDir.toPath().resolve(pdfFileName);
 
-        String scriptProp = System.getProperty("pdf.printer.script");
-        List<String> candidates = Arrays.asList(
-                scriptProp, "PdfPrinter.py", "scripts/PdfPrinter.py", "src/main/java/com/app/external/PdfPrinter.py"
+        String exeName = "PdfPrinter.exe";
+        String scriptName = "PdfPrinter.py";
+
+        List<String> possiblePaths = Arrays.asList(
+            "dist/" + exeName,             
+            "app/" + exeName,              
+            "bin/" + exeName,             
+            exeName,                       
+            "src/main/java/com/app/external/" + scriptName
         );
 
         Path scriptPath = null;
-        for (String c : candidates) {
-            if (c == null || c.trim().isEmpty()) continue;
-            Path sp = Paths.get(c);
-            if (Files.exists(sp)) { scriptPath = sp.toAbsolutePath(); break; }
+        for (String pathStr : possiblePaths) {
+            Path p = Paths.get(pathStr).toAbsolutePath();
+            if (!Files.exists(p)) {
+                 p = Paths.get(System.getProperty("user.dir"), pathStr).toAbsolutePath();
+            }
+            
+            if (Files.exists(p)) {
+                scriptPath = p;
+                break;
+            }
         }
 
-        if (scriptPath == null) throw new IllegalStateException("PdfPrinter.py not found.");
+        if (scriptPath == null) throw new IllegalStateException("PdfPrinter executable or script not found.");
 
         List<String> cmd = new ArrayList<>();
-        cmd.add("python");
-        cmd.add(scriptPath.toString());
+        if (scriptPath.toString().endsWith(".exe")) {
+            cmd.add(scriptPath.toString());
+        } else {
+            cmd.add("python");
+            cmd.add(scriptPath.toString());
+        }
         cmd.add(tempJson.toString());
         cmd.add(outPdfPath.toString());
 
