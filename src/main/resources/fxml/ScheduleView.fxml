@@ -3,28 +3,28 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 <?import javafx.geometry.Insets?>
-<?import javafx.scene.text.Font?>
 
 <BorderPane xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
             fx:controller="com.app.controller.ScheduleController"
-            prefHeight="700.0" prefWidth="1200.0">
+            stylesheets="@../css/style.css"
+            prefHeight="600.0" prefWidth="1000.0">
 
     <left>
-        <VBox spacing="10" prefWidth="250" style="-fx-background-color: #f8f9fa; -fx-border-color: #dee2e6; -fx-border-width: 0 1 0 0;">
-            <padding><Insets top="20" right="15" bottom="20" left="15"/></padding>
-            <ListView fx:id="scheduleListView" VBox.vgrow="ALWAYS"/>
+        <VBox spacing="5" prefWidth="220" styleClass="sidebar-panel">
+            <Label text="Generated Schedules" styleClass="section-title"/>
+            <ListView fx:id="scheduleListView" VBox.vgrow="ALWAYS" style="-fx-background-color: transparent; -fx-border-color: #dee2e6;"/>
         </VBox>
     </left>
 
     <center>
         <VBox>
-            <HBox alignment="CENTER_LEFT" spacing="15" style="-fx-padding: 10;">
-                <Label fx:id="lblSelectedSchedule" text="No Schedule Selected"/>
+            <HBox alignment="CENTER_LEFT" spacing="15" style="-fx-padding: 8; -fx-background-color: #fff; -fx-border-color: #dee2e6; -fx-border-width: 0 0 1 0;">
+                <Label fx:id="lblSelectedSchedule" text="No Schedule Selected" style="-fx-font-weight: bold; -fx-text-fill: #2c3e50;"/>
             </HBox>
 
-            <TabPane fx:id="roomTabPane" tabClosingPolicy="UNAVAILABLE"/>
+            <TabPane fx:id="roomTabPane" tabClosingPolicy="UNAVAILABLE" style="-fx-background-color: #f4f6f7;"/>
 
-            <ScrollPane fx:id="scrollPane" fitToWidth="false" fitToHeight="false" VBox.vgrow="ALWAYS">
+            <ScrollPane fx:id="scrollPane" fitToWidth="false" fitToHeight="false" VBox.vgrow="ALWAYS" style="-fx-background: #f4f6f7;">
                 <content>
                     <VBox fx:id="mainContainer" spacing="0">
                         <HBox alignment="TOP_LEFT">
@@ -45,14 +45,14 @@
     </center>
 
     <bottom>
-        <HBox spacing="15" alignment="CENTER_LEFT" style="-fx-padding: 10; -fx-background-color: #34495e;">
+        <HBox spacing="10" alignment="CENTER_LEFT" styleClass="top-bar" style="-fx-background-color: #34495e;">
             
-            <Label fx:id="lblStatus" text="Ready" style="-fx-font-weight: bold; -fx-text-fill: white;"/>
+            <Label fx:id="lblStatus" text="Ready" style="-fx-font-weight: bold; -fx-text-fill: white; -fx-font-size: 11px;"/>
             
             <Region HBox.hgrow="ALWAYS" />
             
-            <Button fx:id="btnPrintSelected" text="Print Selected Schedule" onAction="#handlePrintSelected"
-                    style="-fx-background-color: #e67e22; -fx-text-fill: white; -fx-font-weight: bold; -fx-cursor: hand; -fx-padding: 5 15 5 15; -fx-background-radius: 4;"/>
+            <Button fx:id="btnPrintSelected" text="Export PDF" onAction="#handlePrintSelected"
+                    style="-fx-background-color: #e67e22; -fx-text-fill: white; -fx-font-weight: bold; -fx-cursor: hand; -fx-padding: 5 15; -fx-font-size: 11px;"/>
         </HBox>
     </bottom>
 

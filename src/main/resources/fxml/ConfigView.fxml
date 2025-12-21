@@ -7,117 +7,98 @@
 
 <BorderPane xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
             fx:controller="com.app.controller.ConfigController"
-            prefHeight="700.0" prefWidth="1000.0">
-
-    <center>
-        <VBox spacing="10" style="-fx-background-color: white; -fx-padding: 20;">
+            stylesheets="@../css/style.css"
+            prefHeight="600.0" prefWidth="900.0"> <center>
+        <VBox spacing="10" styleClass="card-panel" style="-fx-padding: 15;">
             <StackPane>
-                <Label text="Exam Sessions" textFill="#2c3e50">
-                    <font><Font name="System Bold" size="20.0"/></font>
-                </Label>
+                <Label text="Exam Sessions" styleClass="header-title"/>
             </StackPane>
+            
             <TableView fx:id="courseTable" VBox.vgrow="ALWAYS">
                 <columns>
-                    <TableColumn fx:id="colCourseCode" text="Course Code" prefWidth="120" resizable="false"/>
-                    <TableColumn fx:id="colDuration" text="Duration (min)" prefWidth="120" resizable="false" style="-fx-alignment: CENTER;"/>
-                    <TableColumn fx:id="colStudentCount" text="Student Count" prefWidth="110" resizable="false" style="-fx-alignment: CENTER;"/>
-                    <TableColumn fx:id="colEnrolledStudents" text="Enrolled Students (IDs)" prefWidth="300"/>
+                    <TableColumn fx:id="colCourseCode" text="Course Code" prefWidth="100"/>
+                    <TableColumn fx:id="colDuration" text="Duration" prefWidth="80" style="-fx-alignment: CENTER;"/>
+                    <TableColumn fx:id="colStudentCount" text="Students" prefWidth="80" style="-fx-alignment: CENTER;"/>
+                    <TableColumn fx:id="colEnrolledStudents" text="Enrolled IDs" prefWidth="250"/>
                 </columns>
                 <columnResizePolicy>
                     <TableView fx:constant="CONSTRAINED_RESIZE_POLICY"/>
                 </columnResizePolicy>
             </TableView>
+            
             <HBox spacing="10" alignment="CENTER_RIGHT">
-                <Label text="View raw data lists:" textFill="#95a5a6"/>
-                <Button text="View Students" onAction="#handleViewStudents" style="-fx-base: #ecf0f1; -fx-cursor: hand;"/>
-                <Button text="View Rooms" onAction="#handleViewRooms" style="-fx-base: #ecf0f1; -fx-cursor: hand;"/>
+                <Label text="Raw Data:" styleClass="label-muted"/>
+                <Button text="Students" onAction="#handleViewStudents" styleClass="button-base, button-small"/>
+                <Button text="Rooms" onAction="#handleViewRooms" styleClass="button-base, button-small"/>
             </HBox>
         </VBox>
     </center>
 
     <right>
-        <VBox spacing="10" prefWidth="320" 
-              style="-fx-background-color: #f8f9fa; -fx-border-color: #dee2e6; -fx-border-width: 0 0 0 1;">
-            <padding>
-                <Insets top="15" right="15" bottom="15" left="15"/>
-            </padding>
-
-            <Label text="Global Settings" textFill="#2c3e50">
-                <font><Font name="System Bold" size="14.0"/></font>
-            </Label>
+        <VBox spacing="10" prefWidth="280" styleClass="sidebar-panel"> <Label text="Global Settings" styleClass="section-title"/>
             
-            <GridPane hgap="10" vgap="5">
+            <GridPane hgap="8" vgap="4">
                 <columnConstraints>
                     <ColumnConstraints hgrow="ALWAYS" percentWidth="50"/>
                     <ColumnConstraints hgrow="ALWAYS" percentWidth="50"/>
                 </columnConstraints>
                 
-                <Label text="Start Date:" GridPane.rowIndex="0" GridPane.columnIndex="0" textFill="#7f8c8d" style="-fx-font-size: 11px;"/>
-                <Label text="End Date:" GridPane.rowIndex="0" GridPane.columnIndex="1" textFill="#7f8c8d" style="-fx-font-size: 11px;"/>
-                <DatePicker fx:id="dateStartDate" promptText="dd/MM/yyyy" maxWidth="Infinity" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
-                <DatePicker fx:id="dateEndDate" promptText="dd/MM/yyyy" maxWidth="Infinity" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+                <Label text="Start Date:" GridPane.rowIndex="0" GridPane.columnIndex="0" styleClass="label-muted"/>
+                <Label text="End Date:" GridPane.rowIndex="0" GridPane.columnIndex="1" styleClass="label-muted"/>
+                <DatePicker fx:id="dateStartDate" promptText="Start" maxWidth="Infinity" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+                <DatePicker fx:id="dateEndDate" promptText="End" maxWidth="Infinity" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
                 
-                <Label text="Daily Start Time:" GridPane.rowIndex="2" GridPane.columnIndex="0" textFill="#7f8c8d" style="-fx-font-size: 11px;"/>
-                <Label text="Daily End Time:" GridPane.rowIndex="2" GridPane.columnIndex="1" textFill="#7f8c8d" style="-fx-font-size: 11px;"/>
+                <Label text="Day Start:" GridPane.rowIndex="2" GridPane.columnIndex="0" styleClass="label-muted"/>
+                <Label text="Day End:" GridPane.rowIndex="2" GridPane.columnIndex="1" styleClass="label-muted"/>
                 <Spinner fx:id="spinDayStartTime" editable="true" maxWidth="Infinity" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
                 <Spinner fx:id="spinDayEndTime" editable="true" maxWidth="Infinity" GridPane.rowIndex="3" GridPane.columnIndex="1"/>
                 
-                <Label text="Min Gap (min):" GridPane.rowIndex="4" GridPane.columnIndex="0" textFill="#7f8c8d" style="-fx-font-size: 11px;"/>
-                <Label text="Max Exams/Day:" GridPane.rowIndex="4" GridPane.columnIndex="1" textFill="#7f8c8d" style="-fx-font-size: 11px;"/>
-                
+                <Label text="Gap (min):" GridPane.rowIndex="4" GridPane.columnIndex="0" styleClass="label-muted"/>
+                <Label text="Max/Day:" GridPane.rowIndex="4" GridPane.columnIndex="1" styleClass="label-muted"/>
                 <Spinner fx:id="spinMinGap" editable="true" maxWidth="Infinity" GridPane.rowIndex="5" GridPane.columnIndex="0"/>
                 <Spinner fx:id="spinMaxExams" editable="true" maxWidth="Infinity" GridPane.rowIndex="5" GridPane.columnIndex="1"/>
             </GridPane>
             
-            <Separator style="-fx-padding: 5 0;"/>
+            <Separator/>
 
             <VBox spacing="5" VBox.vgrow="ALWAYS">
                 <HBox alignment="CENTER_LEFT">
-                    <Label text="Global Constraints" textFill="#2c3e50" style="-fx-font-weight: bold;"/>
+                    <Label text="Global Constraints" style="-fx-font-weight: bold;"/>
                     <Region HBox.hgrow="ALWAYS"/>
-                    <Button fx:id="btnAddGlobalConstraint" text="+Add" onAction="#handleAddGlobalConstraint"
-                            style="-fx-background-color: #3498db; -fx-text-fill: white; -fx-font-size: 10px; -fx-cursor: hand; -fx-min-width: 25px;"/>
+                    <Button fx:id="btnAddGlobalConstraint" text="+Add" onAction="#handleAddGlobalConstraint" styleClass="button-primary, button-small"/>
                 </HBox>
-                <ListView fx:id="listGlobalConstraints" VBox.vgrow="ALWAYS" style="-fx-background-radius: 4;"/>
-                <Button fx:id="btnRemoveGlobalConstraint" text="Remove Selected" onAction="#handleRemoveGlobalConstraint" maxWidth="Infinity"
-                        style="-fx-text-fill: #c0392b; -fx-background-color: white; -fx-border-color: #c0392b; -fx-border-radius: 4; -fx-cursor: hand; -fx-font-size: 10px;"/>
+                <ListView fx:id="listGlobalConstraints" VBox.vgrow="ALWAYS"/>
+                <Button fx:id="btnRemoveGlobalConstraint" text="Remove Selected" onAction="#handleRemoveGlobalConstraint" maxWidth="Infinity" styleClass="button-danger"/>
             </VBox>
 
-            <Separator style="-fx-padding: 5 0;"/>
+            <Separator/>
 
             <VBox spacing="5" VBox.vgrow="NEVER">
-                <Label text="Selected Course Config" textFill="#2c3e50">
-                    <font><Font name="System Bold" size="14.0"/></font>
-                </Label>
-                <VBox spacing="5" style="-fx-background-color: white; -fx-padding: 8; -fx-border-color: #e0e0e0; -fx-border-radius: 4;">
-                    <Label fx:id="lblSelectedCourse" text="No Selection" textFill="#2980b9" style="-fx-font-weight: bold;"/>
+                <Label text="Course Settings" styleClass="section-title"/>
+                <VBox spacing="5" styleClass="card-panel" style="-fx-padding: 8;">
+                    <Label fx:id="lblSelectedCourse" text="Select a Course" style="-fx-text-fill: #2980b9; -fx-font-weight: bold;"/>
                     <HBox spacing="10" alignment="CENTER_LEFT">
-                        <Label text="Duration:" style="-fx-font-size: 11px;"/>
-                        <Spinner fx:id="spinExamDuration" editable="true" maxWidth="100" disable="true"/>
+                        <Label text="Duration:" styleClass="label-muted"/>
+                        <Spinner fx:id="spinExamDuration" editable="true" maxWidth="80" disable="true"/>
                     </HBox>
                 </VBox>
             </VBox>
             
-            <Separator style="-fx-padding: 5 0;"/>
+            <Separator/>
             
             <VBox spacing="5" VBox.vgrow="ALWAYS">
                 <HBox alignment="CENTER_LEFT">
-                    <Label text="Course Constraints" textFill="#2c3e50" style="-fx-font-weight: bold;"/>
+                    <Label text="Course Constraints" style="-fx-font-weight: bold;"/>
                     <Region HBox.hgrow="ALWAYS"/>
-                    <Button fx:id="btnAddConstraint" text="+ Add" onAction="#handleAddConstraint" disable="true"
-                            style="-fx-background-color: #3498db; -fx-text-fill: white; -fx-font-size: 10px; -fx-cursor: hand;"/>
+                    <Button fx:id="btnAddConstraint" text="+ Add" onAction="#handleAddConstraint" disable="true" styleClass="button-primary, button-small"/>
                 </HBox>
-                <ListView fx:id="listConstraints" VBox.vgrow="ALWAYS" style="-fx-background-radius: 4;"/>
-                <Button fx:id="btnRemoveConstraint" text="Remove Selected" onAction="#handleRemoveConstraint" maxWidth="Infinity" disable="true"
-                        style="-fx-text-fill: #c0392b; -fx-background-color: white; -fx-border-color: #c0392b; -fx-border-radius: 4; -fx-cursor: hand; -fx-font-size: 10px;"/>
+                <ListView fx:id="listConstraints" VBox.vgrow="ALWAYS"/>
+                <Button fx:id="btnRemoveConstraint" text="Remove Selected" onAction="#handleRemoveConstraint" maxWidth="Infinity" disable="true" styleClass="button-danger"/>
             </VBox>
             
-            <Separator style="-fx-padding: 5 0;"/>
+            <Separator/>
             
-            <Button fx:id="btnGenerate" text="GENERATE SCHEDULES" onAction="#handleGenerate"
-                    maxWidth="Infinity" prefHeight="45"
-                    style="-fx-background-color: #27ae60; -fx-text-fill: white; -fx-font-size: 14px; -fx-font-weight: bold; -fx-cursor: hand; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.2), 5, 0, 0, 2);">
-            </Button>
+            <Button fx:id="btnGenerate" text="GENERATE SCHEDULE" onAction="#handleGenerate" maxWidth="Infinity" prefHeight="40" styleClass="button-success"/>
         </VBox>
     </right>
 </BorderPane>

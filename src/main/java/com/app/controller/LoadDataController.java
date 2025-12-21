@@ -163,25 +163,9 @@ public class LoadDataController {
     public void setDependencies(MasterDataRepository repository, MainController mainController) {
         this.masterRepository = repository;
         this.mainController = mainController;
-
-        preloadDebugData();
     }
 
     private void log(String message) {
         logArea.appendText("\n" + message);
-    }
-
-    private void preloadDebugData() {
-        String pathStudents = "data/debug/sampleData_AllStudents.csv";
-        String pathCourses = "data/debug/sampleData_AllCourses.csv";
-        String pathRooms = "data/debug/sampleData_AllClassroomsAndTheirCapacities.csv";
-        String pathAttendance = "data/debug/sampleData_AllAttendanceLists.csv";
-
-        updateStudentFile(pathStudents);
-        updateCourseFile(pathCourses);
-        updateRoomFile(pathRooms);
-        updateAttendanceFile(pathAttendance);
-
-        log("[DEBUG] Relative paths preloaded from project /data folder.");
     }
 }

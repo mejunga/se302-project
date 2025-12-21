@@ -52,9 +52,9 @@ public class ScheduleController {
     private ScheduleRepository scheduleRepository;
     private MasterDataRepository masterDataRepository;
 
-    private final double ROW_HEIGHT = 100.0; 
-    private final double COL_WIDTH = 250.0; 
-    private final double RULER_WIDTH = 60.0;
+    private final double ROW_HEIGHT = 65.0;  
+    private final double COL_WIDTH = 180.0;  
+    private final double RULER_WIDTH = 50.0;
     
     private Schedule currentSchedule;
     private ClassRoom currentRoomFilter;

@@ -3,30 +3,24 @@
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.layout.VBox?>
 <?import javafx.geometry.Insets?>
-<?import javafx.scene.text.Font?>
 
 <VBox xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
       fx:controller="com.app.controller.ExamCardController"
       fx:id="cardRoot"
-      spacing="4" 
+      spacing="2" 
       alignment="CENTER_LEFT"
       maxWidth="Infinity" maxHeight="Infinity"
-      style="-fx-background-color: #3498db; -fx-background-radius: 6; -fx-border-color: #2980b9; -fx-border-radius: 6; -fx-border-width: 1; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.2), 4, 0, 0, 1); -fx-cursor: hand;">
+      styleClass="exam-card"
+      stylesheets="@../css/style.css">
 
     <padding>
-        <Insets top="8" right="10" bottom="8" left="10"/>
+        <Insets top="4" right="6" bottom="4" left="6"/>
     </padding>
 
-    <Label fx:id="lblCourseCode" text="SE 302" textFill="white">
-        <font><Font name="System Bold" size="14.0"/></font>
-    </Label>
+    <Label fx:id="lblCourseCode" text="CODE" styleClass="exam-card-title"/>
     
-    <Label fx:id="lblRoomInfo" text="A101, B202" textFill="#ecf0f1" wrapText="true" VBox.vgrow="ALWAYS" maxHeight="Infinity" alignment="TOP_LEFT">
-        <font><Font size="11.0"/></font>
-    </Label>
+    <Label fx:id="lblRoomInfo" text="Room" wrapText="true" VBox.vgrow="ALWAYS" maxHeight="Infinity" alignment="TOP_LEFT" styleClass="exam-card-text"/>
     
-    <Label fx:id="lblTimeInfo" text="09:00 - 10:30" textFill="#dff9fb">
-        <font><Font name="System Bold" size="11.0"/></font>
-    </Label>
+    <Label fx:id="lblTimeInfo" text="00:00 - 00:00" styleClass="exam-card-time"/>
 
 </VBox>

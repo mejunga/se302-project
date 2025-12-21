@@ -2,60 +2,47 @@
 
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-<?import javafx.scene.text.Font?>
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.shape.SVGPath?>
 
 <VBox xmlns="http://javafx.com/javafx" 
       xmlns:fx="http://javafx.com/fxml"
       fx:controller="com.app.controller.HomeController"
-      alignment="CENTER" spacing="20" 
+      stylesheets="@../css/style.css"
+      alignment="CENTER" spacing="15" 
       style="-fx-background-color: white;">
 
     <padding>
-        <Insets top="50" right="50" bottom="50" left="50"/>
+        <Insets top="30" right="30" bottom="30" left="30"/>
     </padding>
 
     <StackPane>
         <children>
             <SVGPath content="M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zM9 14H7v-2h2v2zm4 0h-2v-2h2v2zm4 0h-2v-2h2v2zm-8 4H7v-2h2v2zm4 0h-2v-2h2v2zm4 0h-2v-2h2v2z" 
-                     fill="#3498db" scaleX="3" scaleY="3"/>
+                     fill="#3498db" scaleX="2.5" scaleY="2.5"/>
         </children>
         <padding>
-            <Insets bottom="30"/>
+            <Insets bottom="20"/>
         </padding>
     </StackPane>
 
-    <Label text="Welcome to Exam Scheduler" textFill="#2c3e50">
-        <font>
-            <Font name="System Bold" size="36.0"/>
-        </font>
-    </Label>
+    <Label text="Welcome to Exam Scheduler" styleClass="hero-title"/>
 
     <Label text="Streamline your academic planning with automated conflict resolution." 
-           textFill="#7f8c8d" wrapText="true" textAlignment="CENTER" maxWidth="600">
-        <font>
-            <Font size="18.0"/>
-        </font>
-    </Label>
+           styleClass="hero-subtitle" wrapText="true" textAlignment="CENTER" maxWidth="500"/>
     
     <Label text="Import your data, define constraints, and generate perfect schedules in seconds." 
-           textFill="#95a5a6" wrapText="true" textAlignment="CENTER" maxWidth="500">
-        <font>
-            <Font size="14.0"/>
-        </font>
-    </Label>
+           textFill="#95a5a6" wrapText="true" textAlignment="CENTER" maxWidth="450" style="-fx-font-size: 12px;"/>
 
-    <Region prefHeight="10"/>
+    <Region prefHeight="15"/>
 
     <HBox alignment="CENTER" spacing="5">
-        <Label text="First time here?" textFill="#7f8c8d"/>
+        <Label text="First time here?" textFill="#7f8c8d" style="-fx-font-size: 11px;"/>
         <Hyperlink text="Read the User Manual" onAction="#handleOpenManual"
                    textFill="#3498db" 
-                   style="-fx-border-color: transparent; -fx-underline: true; -fx-font-weight: bold;"/>
+                   style="-fx-border-color: transparent; -fx-underline: true; -fx-font-weight: bold; -fx-font-size: 11px;"/>
     </HBox>
 
-    <Button text="Start New Schedule" onAction="#handleStart"
-            style="-fx-background-color: #3498db; -fx-text-fill: white; -fx-font-size: 16px; -fx-font-weight: bold; -fx-padding: 10 30; -fx-background-radius: 50; -fx-cursor: hand; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.2), 5, 0, 0, 1);"/>
+    <Button text="Start New Schedule" onAction="#handleStart" styleClass="button-pill"/>
 
 </VBox>

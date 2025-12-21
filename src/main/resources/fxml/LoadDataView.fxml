@@ -3,82 +3,74 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 <?import javafx.geometry.Insets?>
-<?import javafx.scene.text.Font?>
 
 <VBox xmlns="http://javafx.com/javafx"
       xmlns:fx="http://javafx.com/fxml"
       fx:controller="com.app.controller.LoadDataController"
-      spacing="20.0" alignment="TOP_CENTER"
+      stylesheets="@../css/style.css"
+      spacing="15.0" alignment="TOP_CENTER"
       style="-fx-background-color: white;">
 
     <padding>
-        <Insets top="30" right="40" bottom="30" left="40"/>
+        <Insets top="20" right="30" bottom="20" left="30"/>
     </padding>
 
-    <VBox spacing="5" alignment="CENTER_LEFT" maxWidth="800">
-        <Label text="Step 1: Import Data" textFill="#2c3e50">
-            <font><Font name="System Bold" size="24.0"/></font>
-        </Label>
-        <Label text="Please select the individual CSV files for each category." 
-               textFill="#7f8c8d"/>
+    <VBox spacing="2" alignment="CENTER_LEFT" maxWidth="750">
+        <Label text="Step 1: Import Data" styleClass="header-title"/>
+        <Label text="Please select the individual CSV files for each category." styleClass="label-muted"/>
     </VBox>
 
-    <Separator maxWidth="800" />
+    <Separator maxWidth="750" />
 
-    <GridPane hgap="10" vgap="15" maxWidth="800">
+    <GridPane hgap="10" vgap="10" maxWidth="750">
         <columnConstraints>
-            <ColumnConstraints minWidth="100" halignment="RIGHT"/> <ColumnConstraints hgrow="ALWAYS"/> <ColumnConstraints minWidth="100"/> </columnConstraints>
+            <ColumnConstraints minWidth="80" halignment="RIGHT"/> <ColumnConstraints hgrow="ALWAYS"/> <ColumnConstraints minWidth="80"/> 
+        </columnConstraints>
 
-        <Label text="Students CSV:" GridPane.rowIndex="0" GridPane.columnIndex="0" style="-fx-font-weight: bold;"/>
+        <Label text="Students:" GridPane.rowIndex="0" GridPane.columnIndex="0" style="-fx-font-weight: bold;"/>
         <TextField fx:id="txtStudentsPath" promptText="Select students.csv..." editable="false" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
-        <Button text="Browse..." onAction="#browseStudents" GridPane.rowIndex="0" GridPane.columnIndex="2"/>
+        <Button text="Browse" onAction="#browseStudents" styleClass="button-base, button-small" GridPane.rowIndex="0" GridPane.columnIndex="2"/>
 
-        <Label text="Courses CSV:" GridPane.rowIndex="1" GridPane.columnIndex="0" style="-fx-font-weight: bold;"/>
+        <Label text="Courses:" GridPane.rowIndex="1" GridPane.columnIndex="0" style="-fx-font-weight: bold;"/>
         <TextField fx:id="txtCoursesPath" promptText="Select courses.csv..." editable="false" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
-        <Button text="Browse..." onAction="#browseCourses" GridPane.rowIndex="1" GridPane.columnIndex="2"/>
+        <Button text="Browse" onAction="#browseCourses" styleClass="button-base, button-small" GridPane.rowIndex="1" GridPane.columnIndex="2"/>
 
-        <Label text="Rooms CSV:" GridPane.rowIndex="2" GridPane.columnIndex="0" style="-fx-font-weight: bold;"/>
+        <Label text="Rooms:" GridPane.rowIndex="2" GridPane.columnIndex="0" style="-fx-font-weight: bold;"/>
         <TextField fx:id="txtRoomsPath" promptText="Select rooms.csv..." editable="false" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
-        <Button text="Browse..." onAction="#browseRooms" GridPane.rowIndex="2" GridPane.columnIndex="2"/>
+        <Button text="Browse" onAction="#browseRooms" styleClass="button-base, button-small" GridPane.rowIndex="2" GridPane.columnIndex="2"/>
 
-        <Label text="Attendance Lists CSV:" GridPane.rowIndex="3" GridPane.columnIndex="0" style="-fx-font-weight: bold;"/>
+        <Label text="Attendance:" GridPane.rowIndex="3" GridPane.columnIndex="0" style="-fx-font-weight: bold;"/>
         <TextField fx:id="txtAttendancePath" promptText="Select attendance.csv..." editable="false" GridPane.rowIndex="3" GridPane.columnIndex="1"/>
-        <Button text="Browse..." onAction="#browseAttendance" GridPane.rowIndex="3" GridPane.columnIndex="2"/>
+        <Button text="Browse" onAction="#browseAttendance" styleClass="button-base, button-small" GridPane.rowIndex="3" GridPane.columnIndex="2"/>
     </GridPane>
 
     <Button text="LOAD ALL DATA" onAction="#handleLoad" fx:id="btnLoad"
-            style="-fx-background-color: #27ae60; -fx-text-fill: white; -fx-padding: 10 30; -fx-font-weight: bold; -fx-cursor: hand;"
-            maxWidth="300"/>
+            styleClass="button-success" maxWidth="250"/>
 
-    <Separator maxWidth="800" />
+    <Separator maxWidth="750" />
 
-    <HBox spacing="20" alignment="CENTER" maxWidth="800">
-        <VBox styleClass="stat-card" style="-fx-background-color: #f8f9fa; -fx-border-color: #e0e0e0; -fx-border-radius: 8;" 
-              HBox.hgrow="ALWAYS" alignment="CENTER" spacing="5">
-            <padding><Insets top="15" right="15" bottom="15" left="15"/></padding>
-            <Label text="Students" textFill="#7f8c8d"/>
-            <Label fx:id="lblStudentCount" text="0" textFill="#2c3e50"><font><Font name="System Bold" size="24.0"/></font></Label>
+    <HBox spacing="15" alignment="CENTER" maxWidth="750">
+        <VBox styleClass="stat-card" HBox.hgrow="ALWAYS" alignment="CENTER" spacing="2">
+            <padding><Insets top="10" right="10" bottom="10" left="10"/></padding>
+            <Label text="Students" styleClass="label-muted"/>
+            <Label fx:id="lblStudentCount" text="0" styleClass="stat-count"/>
         </VBox>
 
-        <VBox styleClass="stat-card" style="-fx-background-color: #f8f9fa; -fx-border-color: #e0e0e0; -fx-border-radius: 8;" 
-              HBox.hgrow="ALWAYS" alignment="CENTER" spacing="5">
-            <padding><Insets top="15" right="15" bottom="15" left="15"/></padding>
-            <Label text="Courses" textFill="#7f8c8d"/>
-            <Label fx:id="lblCourseCount" text="0" textFill="#2c3e50"><font><Font name="System Bold" size="24.0"/></font></Label>
+        <VBox styleClass="stat-card" HBox.hgrow="ALWAYS" alignment="CENTER" spacing="2">
+            <padding><Insets top="10" right="10" bottom="10" left="10"/></padding>
+            <Label text="Courses" styleClass="label-muted"/>
+            <Label fx:id="lblCourseCount" text="0" styleClass="stat-count"/>
         </VBox>
 
-        <VBox styleClass="stat-card" style="-fx-background-color: #f8f9fa; -fx-border-color: #e0e0e0; -fx-border-radius: 8;" 
-              HBox.hgrow="ALWAYS" alignment="CENTER" spacing="5">
-            <padding><Insets top="15" right="15" bottom="15" left="15"/></padding>
-            <Label text="Rooms" textFill="#7f8c8d"/>
-            <Label fx:id="lblRoomCount" text="0" textFill="#2c3e50"><font><Font name="System Bold" size="24.0"/></font></Label>
+        <VBox styleClass="stat-card" HBox.hgrow="ALWAYS" alignment="CENTER" spacing="2">
+            <padding><Insets top="10" right="10" bottom="10" left="10"/></padding>
+            <Label text="Rooms" styleClass="label-muted"/>
+            <Label fx:id="lblRoomCount" text="0" styleClass="stat-count"/>
         </VBox>
     </HBox>
 
-    <VBox maxWidth="800" spacing="5" VBox.vgrow="ALWAYS">
-        <Label text="Process Log:" textFill="#7f8c8d" style="-fx-font-weight: bold;"/>
-        <TextArea fx:id="logArea" editable="false" wrapText="true" 
-                  style="-fx-control-inner-background: #fafafa;"
-                  VBox.vgrow="ALWAYS"/>
+    <VBox maxWidth="750" spacing="2" VBox.vgrow="ALWAYS">
+        <Label text="Process Log:" styleClass="label-muted" style="-fx-font-weight: bold;"/>
+        <TextArea fx:id="logArea" editable="false" wrapText="true" styleClass="log-area" VBox.vgrow="ALWAYS"/>
     </VBox>
 </VBox>

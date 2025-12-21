@@ -1,0 +1,169 @@
+.root {
+    -fx-font-family: 'Segoe UI', 'Helvetica', 'Arial', sans-serif;
+    -fx-font-size: 12px; 
+    -fx-background-color: #f4f6f7;
+}
+
+.button-base {
+    -fx-background-color: #ecf0f1;
+    -fx-text-fill: #2c3e50;
+    -fx-cursor: hand;
+    -fx-background-radius: 4;
+    -fx-padding: 6 12;
+}
+.button-base:hover { -fx-background-color: #bdc3c7; }
+
+.button-primary {
+    -fx-background-color: #3498db;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+}
+.button-primary:hover { -fx-background-color: #2980b9; }
+
+.button-success {
+    -fx-background-color: #27ae60;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-font-size: 13px;
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 5, 0, 0, 2);
+}
+.button-success:hover { -fx-background-color: #2ecc71; }
+
+.button-danger {
+    -fx-background-color: white;
+    -fx-text-fill: #c0392b;
+    -fx-border-color: #c0392b;
+    -fx-border-radius: 4;
+    -fx-font-size: 11px;
+}
+.button-danger:hover { -fx-background-color: #ffecec; }
+
+.button-small {
+    -fx-font-size: 10px;
+    -fx-padding: 4 8;
+    -fx-min-width: 60px;
+}
+
+.header-title {
+    -fx-font-size: 18px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #2c3e50;
+}
+.section-title {
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #34495e;
+}
+.label-muted { -fx-text-fill: #7f8c8d; -fx-font-size: 11px; }
+
+.card-panel {
+    -fx-background-color: white;
+    -fx-padding: 15;
+    -fx-border-color: #e0e0e0;
+    -fx-border-radius: 4;
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.05), 5, 0, 0, 1);
+}
+.sidebar-panel {
+    -fx-background-color: #f8f9fa;
+    -fx-border-color: #dee2e6;
+    -fx-border-width: 0 0 0 1;
+    -fx-padding: 15;
+}
+
+.table-view { -fx-background-color: transparent; }
+.table-view .column-header-background { -fx-background-color: #ecf0f1; }
+.table-view .column-header { -fx-background-color: transparent; }
+.table-view .column-header .label { -fx-text-fill: #2c3e50; -fx-font-weight: bold; }
+.table-row-cell:filled:selected { -fx-background-color: #3498db; }
+
+.exam-card {
+    -fx-background-color: #3498db;
+    -fx-background-radius: 4;
+    -fx-border-color: #2980b9;
+    -fx-border-radius: 4;
+    -fx-border-width: 1;
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.2), 3, 0, 0, 1);
+    -fx-cursor: hand;
+    -fx-padding: 5;
+}
+.exam-card-title { -fx-font-size: 12px; -fx-font-weight: bold; -fx-text-fill: white; }
+.exam-card-text { -fx-font-size: 10px; -fx-text-fill: #ecf0f1; }
+.exam-card-time { -fx-font-size: 10px; -fx-font-weight: bold; -fx-text-fill: #dff9fb; }
+
+.top-bar {
+    -fx-background-color: #2c3e50;
+    -fx-padding: 10 15;
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.2), 0, 0, 0, 2);
+}
+
+.sidebar {
+    -fx-background-color: #34495e;
+    -fx-pref-width: 220px; 
+}
+
+.sidebar-button {
+    -fx-background-color: transparent;
+    -fx-text-fill: #ecf0f1;
+    -fx-alignment: CENTER_LEFT;
+    -fx-font-size: 13px;
+    -fx-cursor: hand;
+    -fx-border-color: transparent;
+    -fx-border-width: 0 0 0 4; 
+}
+
+.sidebar-button:hover {
+    -fx-background-color: #2c3e50;
+}
+
+.sidebar-button:selected {
+    -fx-background-color: #2980b9;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-border-color: #3498db; 
+}
+
+.footer {
+    -fx-background-color: #ecf0f1;
+    -fx-padding: 5 10;
+    -fx-border-color: #bdc3c7;
+    -fx-border-width: 1 0 0 0;
+}
+
+.hero-title {
+    -fx-font-size: 28px; 
+    -fx-font-weight: bold;
+    -fx-text-fill: #2c3e50;
+}
+.hero-subtitle {
+    -fx-font-size: 14px; 
+    -fx-text-fill: #7f8c8d;
+}
+.button-pill {
+    -fx-background-color: #3498db;
+    -fx-text-fill: white;
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-padding: 8 25;
+    -fx-background-radius: 50;
+    -fx-cursor: hand;
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.2), 3, 0, 0, 1);
+}
+.button-pill:hover { -fx-background-color: #2980b9; }
+
+.stat-card {
+    -fx-background-color: #f8f9fa;
+    -fx-border-color: #e0e0e0;
+    -fx-border-radius: 8;
+    -fx-background-radius: 8;
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.05), 3, 0, 0, 1);
+}
+.stat-count {
+    -fx-font-size: 20px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #2c3e50;
+}
+.log-area {
+    -fx-control-inner-background: #fafafa;
+    -fx-font-family: 'Consolas', 'Monospaced';
+    -fx-font-size: 11px;
+}
