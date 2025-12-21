@@ -18,11 +18,13 @@
 
     <center>
         <VBox>
-            <HBox alignment="CENTER_LEFT" spacing="15" style="-fx-padding: 8; -fx-background-color: #fff; -fx-border-color: #dee2e6; -fx-border-width: 0 0 1 0;">
+            <HBox alignment="CENTER_LEFT" spacing="15" style="-fx-padding: 8; -fx-background-color: #fff; -fx-border-color: #dee2e6; -fx-border-width: 0 0 1 0;" minHeight="40.0">
                 <Label fx:id="lblSelectedSchedule" text="No Schedule Selected" style="-fx-font-weight: bold; -fx-text-fill: #2c3e50;"/>
             </HBox>
 
-            <TabPane fx:id="roomTabPane" tabClosingPolicy="UNAVAILABLE" style="-fx-background-color: #f4f6f7;"/>
+            <TabPane fx:id="roomTabPane" tabClosingPolicy="UNAVAILABLE" 
+                     style="-fx-background-color: #f4f6f7;"
+                     minHeight="38.0" />
 
             <ScrollPane fx:id="scrollPane" fitToWidth="false" fitToHeight="false" VBox.vgrow="ALWAYS" style="-fx-background: #f4f6f7;">
                 <content>
@@ -45,7 +47,7 @@
     </center>
 
     <bottom>
-        <HBox spacing="10" alignment="CENTER_LEFT" styleClass="top-bar" style="-fx-background-color: #34495e;">
+        <HBox spacing="10" alignment="CENTER_LEFT" styleClass="top-bar" style="-fx-background-color: #34495e;" minHeight="40.0">
             
             <Label fx:id="lblStatus" text="Ready" style="-fx-font-weight: bold; -fx-text-fill: white; -fx-font-size: 11px;"/>
             

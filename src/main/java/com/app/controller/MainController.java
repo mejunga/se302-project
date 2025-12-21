@@ -50,7 +50,12 @@ public class MainController {
     }
     
     @FXML public void handleOpenUserManual(ActionEvent event) {
+        if(btnData != null) btnData.setSelected(false);
+        if(btnConfig != null) btnConfig.setSelected(false);
+        if(btnSchedule != null) btnSchedule.setSelected(false);
 
+        loadView("UserManualView");
+        statusLabel.setText("Status: Reading User Manual");
     }
 
     @FXML public void initialize() {
@@ -58,22 +63,21 @@ public class MainController {
         this.scheduleRepository = new ScheduleRepository();
         this.schedulerService = new SchedulerService(masterRepository, scheduleRepository);
 
-        btnData.setDisable(false);
-        btnConfig.setDisable(true);
-        btnSchedule.setDisable(true);
+        if(btnData != null) btnData.setDisable(false);
+        if(btnConfig != null) btnConfig.setDisable(true);
+        if(btnSchedule != null) btnSchedule.setDisable(true);
 
         loadView("HomeView");
-        
         statusLabel.setText("Status: Welcome");
     }
 
     public void enableConfigStage() {
-        btnConfig.setDisable(false);
+        if(btnConfig != null) btnConfig.setDisable(false);
         showConfigView(null);
     }
 
     public void enableScheduleStage() {
-        btnSchedule.setDisable(false);
+        if(btnSchedule != null) btnSchedule.setDisable(false);
         showScheduleView(null);
     }
 
@@ -81,8 +85,8 @@ public class MainController {
         viewCache.remove("ConfigView");
         viewCache.remove("ScheduleView");
 
-        btnConfig.setDisable(true);
-        btnSchedule.setDisable(true);
+        if(btnConfig != null) btnConfig.setDisable(true);
+        if(btnSchedule != null) btnSchedule.setDisable(true);
         
         setStatus("Previous stages reset due to new data load.");
     }
@@ -103,12 +107,13 @@ public class MainController {
             URL resource = getClass().getResource("/fxml/" + fxmlFileName + ".fxml");
             
             if (resource == null) {
+                System.err.println("FATAL: FXML not found: " + fxmlFileName);
                 statusLabel.setText("Error: " + fxmlFileName + " not found.");
                 return;
             }
 
             FXMLLoader loader = new FXMLLoader(resource);
-            Parent view = loader.load();
+            Parent view = loader.load(); 
             
             Object controller = loader.getController();
 
@@ -116,25 +121,19 @@ public class MainController {
                 ((LoadDataController) controller).setDependencies(this.masterRepository, this);
             }
             else if (controller instanceof ConfigController) {
-                ((ConfigController) controller).setDependencies(
-                    this.schedulerService, 
-                    this.masterRepository, 
-                    this 
-                );
+                ((ConfigController) controller).setDependencies(this.schedulerService, this.masterRepository, this);
             }
             else if (controller instanceof ScheduleController) {
-                ((ScheduleController) controller).setDependencies(
-                    this.scheduleRepository,
-                    this.schedulerService, 
-                    this.masterRepository
-                );
+                ((ScheduleController) controller).setDependencies(this.scheduleRepository, this.schedulerService, this.masterRepository);
             }
             else if (controller instanceof HomeController) {
                 ((HomeController) controller).setMainController(this);
             }
+            else if (controller instanceof UserManualController) {
+                ((UserManualController) controller).setMainController(this);
+            }
 
             viewCache.put(fxmlFileName, view);
-
             mainBorderPane.setCenter(view);
             
         } catch (IOException e) {

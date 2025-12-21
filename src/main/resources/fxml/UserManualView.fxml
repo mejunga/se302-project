@@ -1,0 +1,196 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
+
+<ScrollPane fitToWidth="true" hbarPolicy="NEVER" pannable="true" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.app.controller.UserManualController">
+   <content>
+      <VBox spacing="15.0" style="-fx-background-color: white;">
+         <padding>
+            <Insets bottom="40.0" left="30.0" right="30.0" top="30.0" />
+         </padding>
+         <children>
+            <Label text="USER MANUAL" textFill="#2c3e50">
+               <font>
+                  <Font name="System Bold" size="28.0" />
+               </font>
+            </Label>
+
+            <Separator />
+
+            <Label text="How to import files?">
+               <font><Font name="System Bold" size="16.0" /></font>
+            </Label>
+            <Label text="On the Load Data page;" wrapText="true" />
+            <Label text="Click the “Browse” button and select your corresponding file for each category.(Repeat this for all four required files)(The files must be in CSV format. Use google if you dont know what is CSV format.)" wrapText="true" />
+            <Label text="After the files are selected, press the “Load All Data” button." wrapText="true" />
+
+            <Label text="● How to view course, student and classroom lists?">
+               <font><Font name="System Bold" size="16.0" /></font>
+            </Label>
+            <Label text="On the Configuration page;" wrapText="true" />
+            <Label text="You can see the course list with their durations and the enrolled students." wrapText="true" />
+            <Label text="Located on the bottom middle of the page, there are two buttons called “Students” and “Rooms”. Click on the respective button to open up the list of students or classrooms." wrapText="true" />
+
+            <ImageView fitWidth="600.0" pickOnBounds="true" preserveRatio="true">
+               <image>
+                  <Image url="@../images/manual_1.png" />
+               </image>
+            </ImageView>
+
+            <Label text="How to generate a schedule?">
+               <font><Font name="System Bold" size="16.0" /></font>
+            </Label>
+            <Label text="After importing the necessary files, on the configuration page follow these steps;" wrapText="true" />
+            
+            <Label text="● Set start and end dates for the schedule.">
+               <font><Font name="System Bold" size="14.0" /></font>
+            </Label>
+            <Label text="Located on the left side of the screen, under “Global Settings” you can either manually enter your desired date with dashes or select from the calendar." wrapText="true" />
+
+            <ImageView fitWidth="600.0" pickOnBounds="true" preserveRatio="true">
+               <image>
+                  <Image url="@../images/manual_2.png" />
+               </image>
+            </ImageView>
+
+            <Label text="● Adjust the duration of exam sessions.">
+               <font><Font name="System Bold" size="14.0" /></font>
+            </Label>
+            <Label text="Click on your desired course from the course list by clicking on it." wrapText="true" />
+            <Label text="On the left side of the screen, under “Course Settings” you can enter the duration manually or using the arrow buttons to increase or decrease it by 5-minute increments. Note that changes are saved automatically." wrapText="true" />
+
+            <ImageView fitWidth="600.0" pickOnBounds="true" preserveRatio="true">
+               <image>
+                  <Image url="@../images/manual_3.png" />
+               </image>
+            </ImageView>
+
+            <Label text="● Add constraints (optional)">
+               <font><Font name="System Bold" size="14.0" /></font>
+            </Label>
+            <Label text="Located on the right side of the screen, there are two types of constraints;" wrapText="true" />
+            
+            <Label text="Global Constraints: (Applies to the entire schedule)" style="-fx-font-weight: bold;" />
+            <Label text="1. Press the “+add” button on the right of the “Global Constraints”." wrapText="true" />
+
+            <ImageView fitWidth="300.0" pickOnBounds="true" preserveRatio="true">
+               <image>
+                  <Image url="@../images/manual_4.png" />
+               </image>
+            </ImageView>
+
+            <Label text="2. Select the day(s) to exclude." wrapText="true" />
+            <Label text="3. Adjust the time range by entering the start and end time manually or using the arrow buttons to increase or decrease." wrapText="true" />
+            <Label text="4. To save your constraint press the “Add Rule” button located on the bottom right of the pop-up or if you don’t want to save it press the “Cancel” button on the left." wrapText="true" />
+
+            <Label text="Course Constraints: (Applies to a specific course)" style="-fx-font-weight: bold;" />
+            <Label text="1. Select a course from the course list by clicking on it." wrapText="true" />
+            <Label text="2. Press the “+add” button on the right of the “Course Constraints”." wrapText="true" />
+            <Label text="3. Select a rule type:" wrapText="true" />
+            
+            <VBox spacing="5.0" style="-fx-padding: 0 0 0 20;">
+               <children>
+                  <Label text="a. Avoid time period;" style="-fx-font-weight: bold;" />
+                  <Label text="i. Select the day(s) when the course cannot take place." wrapText="true" />
+                  <Label text="ii. Adjust the time range by entering the start and end time manually or using the arrow buttons to increase or decrease." wrapText="true" />
+               </children>
+            </VBox>
+
+            <ImageView fitWidth="300.0" pickOnBounds="true" preserveRatio="true">
+               <image>
+                  <Image url="@../images/manual_5.png" />
+               </image>
+            </ImageView>
+
+            <VBox spacing="5.0" style="-fx-padding: 0 0 0 20;">
+               <children>
+                   <Label text="b. Forbidden Room;" style="-fx-font-weight: bold;" />
+                   <Label text="i. Select the classroom(s) where the course cannot take place." wrapText="true" />
+                   <Label text="ii. To save your constraint press the “Add Rule” button located on the bottom right of the pop-up or if you don’t want to save it press the “Cancel” button on the left." wrapText="true" />
+               </children>
+            </VBox>
+
+            <ImageView fitWidth="300.0" pickOnBounds="true" preserveRatio="true">
+               <image>
+                  <Image url="@../images/manual_6.png" />
+               </image>
+            </ImageView>
+
+            <Label text="● Press the “Generate Schedules” button in the bottom right corner." wrapText="true" />
+            <Label text="Note: If the program fails to generate the schedule, try increasing the date range." wrapText="true" style="-fx-font-style: italic;" />
+
+            <Label text="How to navigate between pages?">
+               <font><Font name="System Bold" size="16.0" /></font>
+            </Label>
+            <Label text="Located on the left side of the screen, there are 3 tabs (Load Data, Configuration, View Schedule). Click on the tabs to open their respective pages. Note that some pages might be inaccessible due to the previous pages task not being complete." wrapText="true" />
+
+            <ImageView fitWidth="300.0" pickOnBounds="true" preserveRatio="true">
+               <image>
+                  <Image url="@../images/manual_7.png" />
+               </image>
+            </ImageView>
+
+            <Label text="How to view a schedule list?">
+               <font><Font name="System Bold" size="16.0" /></font>
+            </Label>
+            <Label text="After generating the schedules, on the View Schedule page;" wrapText="true" />
+            <Label text="Located on the right side of the screen, under “Generated Schedules” you can see the schedules that are generated through your data and constraints." wrapText="true" />
+
+            <Label text="● How to select and view schedules?">
+               <font><Font name="System Bold" size="14.0" /></font>
+            </Label>
+            <Label text="From the schedule list, click on the desired schedule to open it." wrapText="true" />
+
+            <ImageView fitWidth="600.0" pickOnBounds="true" preserveRatio="true">
+               <image>
+                  <Image url="@../images/manual_8.png" />
+               </image>
+            </ImageView>
+
+            <Label text="● How to change schedules for classrooms?">
+               <font><Font name="System Bold" size="14.0" /></font>
+            </Label>
+            <Label text="After selecting a schedule, click on the classroom tabs at the top-middle of the screen to open their respective schedules." wrapText="true" />
+
+            <ImageView fitWidth="600.0" pickOnBounds="true" preserveRatio="true">
+               <image>
+                  <Image url="@../images/manual_9.png" />
+               </image>
+            </ImageView>
+
+            <Label text="● How to adjust the schedule?">
+               <font><Font name="System Bold" size="14.0" /></font>
+            </Label>
+            <Label text="You can adjust the schedule by clicking and dragging the exam session into the desired time slot. For minimal changes you can select a course and move it by 5 minutes up and down with arrow keys." wrapText="true" />
+
+            <Label text="● How to print the schedule?">
+               <font><Font name="System Bold" size="14.0" /></font>
+            </Label>
+            <Label text="After selecting and adjusting your desired schedule, you can press the “Export PDF” on the bottom left side of the page and select a file path to print your schedule into a PDF." wrapText="true" />
+
+            <Separator />
+
+            <VBox alignment="CENTER" spacing="15.0">
+               <Label text="Ready to begin?">
+                  <font><Font name="System Bold" size="16.0" /></font>
+               </Label>
+               <Button fx:id="btnStartManual" mnemonicParsing="false" onAction="#handleStartNewSchedule" 
+                       style="-fx-background-color: #27ae60; -fx-text-fill: white; -fx-padding: 10 20; -fx-cursor: hand;" text="START NEW SCHEDULE">
+                  <font>
+                     <Font name="System Bold" size="14.0" />
+                  </font>
+               </Button>
+            </VBox>
+            
+         </children>
+      </VBox>
+   </content>
+</ScrollPane>
