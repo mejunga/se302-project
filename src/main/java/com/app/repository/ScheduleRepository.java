@@ -5,9 +5,16 @@ import com.app.model.ExamSession;
 import com.app.model.Schedule;
 import com.app.model.Schedule.SessionPlacement;
 import com.app.util.JsonHelper;
+import com.google.gson.Gson;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -118,12 +125,12 @@ public class ScheduleRepository {
         String dateStr = (startDate != null) ? startDate.toString() : LocalDate.now().toString();
         ExportData data = new ExportData(dateStr, exportList);
 
-        Path tempJson;
+        String jsonArgument;
         try {
-            tempJson = Files.createTempFile("schedule_export_", ".json");
-            JsonHelper.saveToFile(data, tempJson.toString()); 
-        } catch (IOException e) {
-            throw new RuntimeException("Failed to create temp JSON file", e);
+            Gson gson = new Gson();
+            jsonArgument = gson.toJson(data);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to convert data to JSON", e);
         }
 
         String safeId = (schedule.getId() != null && schedule.getId().length() >= 8) 
@@ -139,7 +146,7 @@ public class ScheduleRepository {
             "app/" + exeName,              
             "bin/" + exeName,             
             exeName,                       
-            "src/main/java/com/app/external/" + scriptName
+            "scripts/PdfPrinter.p" + scriptName
         );
 
         Path scriptPath = null;
@@ -148,7 +155,6 @@ public class ScheduleRepository {
             if (!Files.exists(p)) {
                  p = Paths.get(System.getProperty("user.dir"), pathStr).toAbsolutePath();
             }
-            
             if (Files.exists(p)) {
                 scriptPath = p;
                 break;
@@ -158,30 +164,46 @@ public class ScheduleRepository {
         if (scriptPath == null) throw new IllegalStateException("PdfPrinter executable or script not found.");
 
         List<String> cmd = new ArrayList<>();
+        
         if (scriptPath.toString().endsWith(".exe")) {
             cmd.add(scriptPath.toString());
         } else {
             cmd.add("python");
             cmd.add(scriptPath.toString());
         }
-        cmd.add(tempJson.toString());
-        cmd.add(outPdfPath.toString());
+
+        cmd.add(outPdfPath.toString()); 
 
         ProcessBuilder pb = new ProcessBuilder(cmd);
         pb.redirectErrorStream(true);
 
         try {
             Process pr = pb.start();
+            try (OutputStream os = pr.getOutputStream();
+                 BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(os, StandardCharsets.UTF_8))) {
+                
+                writer.write(jsonArgument);
+                writer.flush(); 
+            }
+
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(pr.getInputStream(), StandardCharsets.UTF_8))) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    System.out.println("[PDF Generator]: " + line);
+                }
+            }
+
             int code = pr.waitFor();
-            if (code != 0) throw new RuntimeException("PDF export script failed code: " + code);
+            if (code != 0) {
+                throw new RuntimeException("PDF export script failed with exit code: " + code);
+            }
+
         } catch (IOException | InterruptedException e) {
             if (e instanceof InterruptedException) Thread.currentThread().interrupt();
             throw new RuntimeException("Failed to execute PDF script.", e);
-        } finally {
-            try { Files.deleteIfExists(tempJson); } catch (IOException ignored) {}
         }
     }
-
+    
     public void clearPossibleSchedules() {
         if (possibleSchedules != null) possibleSchedules.clear();
         else possibleSchedules = new ArrayList<>();

@@ -3,7 +3,7 @@ import json
 import os
 from datetime import datetime, timedelta
 from reportlab.lib import colors
-from reportlab.lib.colors import HexColor  
+from reportlab.lib.colors import HexColor
 from reportlab.lib.pagesizes import A4, landscape
 from reportlab.pdfgen import canvas
 from reportlab.lib.units import mm
@@ -15,7 +15,7 @@ def parse_time_to_minutes(time_str):
     except:
         return 0
 
-def draw_grid_schedule(c, width, height, room_name, exams, start_date_str, total_days, start_hour=8, end_hour=23):
+def draw_grid_schedule(c, width, height, room_name, exams, start_date_str, total_days, start_hour=8, end_hour=20):
     margin_left = 25 * mm
     margin_right = 10 * mm
     margin_top = 25 * mm
@@ -30,9 +30,11 @@ def draw_grid_schedule(c, width, height, room_name, exams, start_date_str, total
     total_minutes = (end_hour - start_hour) * 60
     px_per_min = draw_h / total_minutes
 
+    c.setStrokeAlpha(1)
+    c.setFillAlpha(1)
     c.setFont("Helvetica-Bold", 16)
     c.setFillColor(colors.black)
-    c.drawString(margin_left, height - 15 * mm, f"Exam Schedule - Room: {room_name}")
+    c.drawString(margin_left, height - 15 * mm, f"Exam Schedule - {room_name}")
     
     c.setLineWidth(0.3)
     c.setFont("Helvetica", 8)
@@ -65,7 +67,6 @@ def draw_grid_schedule(c, width, height, room_name, exams, start_date_str, total
 
     for i in range(num_days):
         x = margin_left + (i * col_width)
-        
         c.line(x, height - margin_top, x, margin_bottom)
         
         current_date = dt_start + timedelta(days=i)
@@ -76,7 +77,6 @@ def draw_grid_schedule(c, width, height, room_name, exams, start_date_str, total
         c.rect(x, height - margin_top, col_width, 15*mm, fill=1, stroke=0)
 
         c.setFillColor(HexColor("#2c3e50")) 
-        c.setFont("Helvetica-Bold", 10)
         font_size = 10 if num_days < 10 else 8
         c.setFont("Helvetica-Bold", font_size)
         
@@ -93,7 +93,7 @@ def draw_grid_schedule(c, width, height, room_name, exams, start_date_str, total
 
     BOX_COLOR = HexColor("#4a90e2") 
     BORDER_COLOR = HexColor("#357abd") 
-    TEXT_COLOR = colors.white
+    TEXT_COLOR = colors.black 
 
     for exam in exams:
         day_idx = exam['dayIndex']
@@ -109,31 +109,27 @@ def draw_grid_schedule(c, width, height, room_name, exams, start_date_str, total
 
         offset_start = start_m - (start_hour * 60)
         duration = end_m - start_m
-        
         if offset_start < 0: continue 
 
         rect_x = margin_left + (day_idx * col_width) + 1
         rect_w = col_width - 2
-        
         top_y = height - margin_top - (offset_start * px_per_min)
         rect_h = duration * px_per_min
         rect_y = top_y - rect_h
 
+        c.setFillAlpha(1)
         c.setFillColor(BOX_COLOR)
         c.setStrokeColor(BORDER_COLOR)
         c.roundRect(rect_x, rect_y, rect_w, rect_h, 4, fill=1, stroke=1)
         
         c.setFillColor(TEXT_COLOR)
         c.setFont("Helvetica-Bold", 9)
-        
         course_code = exam['courseCode']
-        
         text_w = c.stringWidth(course_code, "Helvetica-Bold", 9)
         text_x = rect_x + (rect_w - text_w) / 2
         
         if rect_h > 12:
             c.drawString(text_x, rect_y + rect_h/2 - 3, course_code)
-
             if rect_h > 24:
                 c.setFont("Helvetica", 7)
                 time_lbl = f"{start_s}-{end_s}"
@@ -141,33 +137,35 @@ def draw_grid_schedule(c, width, height, room_name, exams, start_date_str, total
                 c.drawString(rect_x + (rect_w - tw2)/2, rect_y + rect_h/2 - 12, time_lbl)
 
 def main():
-    if len(sys.argv) < 3:
+    if len(sys.argv) < 2:
         sys.exit(1)
 
-    input_json = sys.argv[1]
-    output_pdf = sys.argv[2]
+    output_pdf = sys.argv[1]
 
     try:
-        with open(input_json, 'r', encoding='utf-8') as f:
-            full_data = json.load(f)
-            if isinstance(full_data, list):
-                start_date_str = datetime.now().strftime("%Y-%m-%d")
-                data_list = full_data
-            else:
-                start_date_str = full_data.get("startDate", datetime.now().strftime("%Y-%m-%d"))
-                data_list = full_data.get("exams", [])
-                
-    except Exception as e:
+        input_data = sys.stdin.read()
+        if not input_data:
+            sys.exit(1)
+        full_data = json.loads(input_data)
+    except:
         sys.exit(1)
 
-    if data_list:
-        global_max_day_idx = max([e['dayIndex'] for e in data_list])
-        total_duration_days = max(global_max_day_idx + 1, 5) 
+    if isinstance(full_data, list):
+        start_date_str = datetime.now().strftime("%Y-%m-%d")
+        data_list = full_data
     else:
-        total_duration_days = 5
+        start_date_str = full_data.get("startDate", datetime.now().strftime("%Y-%m-%d"))
+        data_list = full_data.get("exams", [])
+
+    if not data_list:
+        sys.exit(1)
+
+    global_max_day_idx = max([e['dayIndex'] for e in data_list])
+    total_duration_days = max(global_max_day_idx + 1, 5)
 
     rooms_map = {}
     for entry in data_list:
+        if not entry.get('roomNames'): continue
         r_list = [r.strip() for r in entry['roomNames'].split(',')]
         for r_name in r_list:
             if r_name not in rooms_map:
@@ -176,7 +174,6 @@ def main():
 
     c = canvas.Canvas(output_pdf, pagesize=landscape(A4))
     w, h = landscape(A4)
-
     sorted_rooms = sorted(rooms_map.keys())
     
     if not sorted_rooms:
@@ -190,7 +187,7 @@ def main():
 
     try:
         c.save()
-    except Exception as e:
+    except:
         sys.exit(1)
 
 if __name__ == "__main__":
